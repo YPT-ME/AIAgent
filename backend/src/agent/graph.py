@@ -24,7 +24,6 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langgraph.graph import END, MessagesState, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
-from langgraph.checkpoint.sqlite import SqliteSaver
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -369,11 +368,10 @@ def create_graph():
     # Tools always return to agent
     workflow.add_edge("tools", "agent")
     
-    # Create SQLite checkpointer for thread persistence
-    checkpointer = SqliteSaver.from_conn_string("/app/storage/checkpoints.db")
-    
-    # Compile the graph with checkpointer
-    return workflow.compile(checkpointer=checkpointer)
+    # Compile the graph
+    # Note: LangGraph Server handles persistence automatically.
+    # No need to provide a custom checkpointer - it will be managed by the platform.
+    return workflow.compile()
 
 
 # Export the compiled graph for LangGraph Server
