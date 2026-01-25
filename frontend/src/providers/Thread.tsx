@@ -1,5 +1,6 @@
 import { validate } from "uuid";
 import { getApiKey } from "@/lib/api-key";
+import { getUserId } from "@/lib/user-session";
 import { Thread } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import {
@@ -47,9 +48,13 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     if (!effectiveApiUrl || !effectiveAssistantId) return [];
     const client = createClient(effectiveApiUrl, getApiKey() ?? undefined);
 
+    // Get the unique user ID for filtering threads
+    const userId = getUserId();
+
     const threads = await client.threads.search({
       metadata: {
         ...getThreadSearchMetadata(effectiveAssistantId),
+        user_id: userId, // Filter threads by user ID
       },
       limit: 100,
     });
