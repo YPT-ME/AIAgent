@@ -1,0 +1,68 @@
+# ==================================================
+# RAG AI Agent - Docker Compose Configuration
+# ==================================================
+
+services:
+  # =============================================================================
+  # LangGraph Server - RAG AI Agent Backend
+  # =============================================================================
+  langgraph-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: rag-langgraph-server
+    ports:
+      - "2024:2024"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      FAISS_INDEX_PATH: /app/storage/faiss
+      MANIFEST_PATH: /app/storage/manifest.json
+      DOCS_DIR: /app/data/docs
+      PDF_DIR: /app/data/docs
+      CHUNK_SIZE: ${CHUNK_SIZE:-1000}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-200}
+      TOP_K: ${TOP_K:-5}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/langgraph.json:/app/langgraph.json:ro
+      - ./backend/storage:/app/storage
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2024/ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # =============================================================================
+  # Agent Chat UI - Built directly from GitHub
+  # =============================================================================
+  agent-chat-ui:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:2024
+        NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+    container_name: rag-chat-ui
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:2024
+      NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+    depends_on:
+      langgraph-server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+networks:
+  rag-network:
+    driver: bridge
