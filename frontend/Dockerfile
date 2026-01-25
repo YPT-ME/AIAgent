@@ -13,18 +13,19 @@ RUN git clone --depth 1 https://github.com/langchain-ai/agent-chat-ui.git . && \
 # Install dependencies
 RUN corepack enable pnpm && pnpm install --frozen-lockfile
 
-# Build arguments
+# Build arguments - MUST be before ENV
 ARG NEXT_PUBLIC_API_URL=http://localhost:2024
 ARG NEXT_PUBLIC_ASSISTANT_ID=rag_agent
 
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV NEXT_PUBLIC_ASSISTANT_ID=${NEXT_PUBLIC_ASSISTANT_ID}
+# Set environment variables
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_ASSISTANT_ID=$NEXT_PUBLIC_ASSISTANT_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Configure for standalone output
-RUN echo 'module.exports = { output: "standalone" }' > next.config.js
+RUN echo 'export default { output: "standalone" };' > next.config.mjs
 
-# Build
+# Build with variables
 RUN pnpm build
 
 # Production image
