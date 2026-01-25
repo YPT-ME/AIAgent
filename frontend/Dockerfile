@@ -1,29 +1,33 @@
-# Agent Chat UI - Direct Build from GitHub
+# Agent Chat UI - Build from Local Source
 FROM node:20-alpine AS base
-
-# Install git
-RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Clone the repository directly
-RUN git clone --depth 1 https://github.com/langchain-ai/agent-chat-ui.git . && \
-    rm -rf .git .github
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
 RUN corepack enable pnpm && pnpm install --frozen-lockfile
 
+# Copy source code
+COPY . .
+
 # Build arguments - MUST be before ENV
 ARG NEXT_PUBLIC_API_URL=http://localhost:2024
 ARG NEXT_PUBLIC_ASSISTANT_ID=rag_agent
+ARG NEXT_PUBLIC_AGENT_NAME="Agent Chat"
+ARG NEXT_PUBLIC_WELCOME_MESSAGE=""
+ARG NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE="true"
+ARG NEXT_PUBLIC_SHOW_FILE_UPLOAD="true"
 
 # Set environment variables
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_ASSISTANT_ID=$NEXT_PUBLIC_ASSISTANT_ID
+ENV NEXT_PUBLIC_AGENT_NAME=$NEXT_PUBLIC_AGENT_NAME
+ENV NEXT_PUBLIC_WELCOME_MESSAGE=$NEXT_PUBLIC_WELCOME_MESSAGE
+ENV NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE=$NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE
+ENV NEXT_PUBLIC_SHOW_FILE_UPLOAD=$NEXT_PUBLIC_SHOW_FILE_UPLOAD
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Configure for standalone output
-RUN echo 'export default { output: "standalone" };' > next.config.mjs
 
 # Build with variables
 RUN pnpm build

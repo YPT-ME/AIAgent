@@ -50,12 +50,20 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:2024
         NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+        NEXT_PUBLIC_AGENT_NAME: ${NEXT_PUBLIC_AGENT_NAME:-Agent Chat}
+        NEXT_PUBLIC_WELCOME_MESSAGE: ${NEXT_PUBLIC_WELCOME_MESSAGE:-}
+        NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE: ${NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE:-true}
+        NEXT_PUBLIC_SHOW_FILE_UPLOAD: ${NEXT_PUBLIC_SHOW_FILE_UPLOAD:-true}
     container_name: rag-chat-ui
     ports:
       - "3001:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:2024
       NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+      NEXT_PUBLIC_AGENT_NAME: ${NEXT_PUBLIC_AGENT_NAME:-Agent Chat}
+      NEXT_PUBLIC_WELCOME_MESSAGE: ${NEXT_PUBLIC_WELCOME_MESSAGE:-}
+      NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE: ${NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE:-true}
+      NEXT_PUBLIC_SHOW_FILE_UPLOAD: ${NEXT_PUBLIC_SHOW_FILE_UPLOAD:-true}
     depends_on:
       langgraph-server:
         condition: service_healthy
