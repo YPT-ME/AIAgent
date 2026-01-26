@@ -9,32 +9,33 @@ A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **La
 │                 │     │                 │     │                 │
 │  Agent Chat UI  │────▶│  LangGraph      │────▶│   RAG Agent     │
 │   (Next.js)     │ WS  │  Server         │     │   (LangGraph)   │
-│                 │◀────│  Port 2024      │◀────│                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+│   Port 3001     │◀────│  Port 2024      │◀────│                 │
+└─────────────────┘     └─────────┬───────┘     └────────┬────────┘
+                                  │                       │
+                                  │                       ▼
+        ┌─────────────────────────┼───────────────┌───────────────┐
+        │                         │               │ search_docs   │
+        │                         │               │    Tool       │
+        │                         │               └───────┬───────┘
+        ▼                         ▼                       │
+┌──────────────┐         ┌──────────────┐                ▼
+│   Grafana    │◀────────│  ClickHouse  │◀───────┌───────────────┐
+│  Dashboards  │         │  Analytics   │        │    FAISS      │
+│  Port 3002   │         │     DB       │        │ Vector Store  │
+└──────────────┘         └──────────────┘        └───────┬───────┘
+                                                          │
+                         ┌────────────────────────────────┤
+                         │                                │
+                         ▼                                ▼
+                 ┌───────────────┐              ┌───────────────┐
+                 │   OpenAI      │              │  Ingestion    │
+                 │   LLM API     │              │  Pipeline     │
+                 └───────────────┘              └───────┬───────┘
                                                         │
-                                │                       ▼
-                                │               ┌───────────────┐
-                                │               │ search_docs   │
-                                │               │    Tool       │
-                                │               └───────┬───────┘
-                                │                       │
-                                ▼                       ▼
-                        ┌───────────────┐       ┌───────────────┐
-                        │    FAISS      │       │    OpenAI     │
-                        │  Vector Store │       │    LLM API    │
-                        └───────────────┘       └───────────────┘
-                                ▲
-                                │
-                        ┌───────────────┐
-                        │  Ingestion    │
-                        │  Pipeline     │
-                        └───────────────┘
-                                ▲
-                                │
-                        ┌───────────────┐
-                        │  PDF Files    │
-                        │  ./data/pdfs  │
-                        └───────────────┘
+                                                ┌───────────────┐
+                                                │  PDF/MD Files │
+                                                │  ./data/docs  │
+                                                └───────────────┘
 ```
 
 ## 🚀 Features
@@ -46,10 +47,10 @@ A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **La
 - **Tool-Using Agent**: Agent with `search_documents` tool for knowledge base queries
 - **Streaming Responses**: Real-time token streaming via LangGraph Server protocol
 - **Citations**: Returns source documents with file names and page numbers
-- **Conversation Logging**: Automatic conversation tracking stored in JSONL format
+- **Analytics Dashboard**: Real-time monitoring with ClickHouse + Grafana
+- **Performance Metrics**: Track response times, token usage, tool calls, and errors
 - **Security & Rate Limiting**: API key authentication, rate limiting per user
-- **User Session Tracking**: Unique user identification per browser session
-- **Production Ready**: Docker, linting, testing, type checking
+- **Production Ready**: Docker, health checks, and auto-restart policies
 
 ## 📋 Prerequisites
 
@@ -96,6 +97,9 @@ docker compose up --build -d
 The services will be available at:
 - **LangGraph Server**: http://localhost:2024
 - **Agent Chat UI**: http://localhost:3001
+- **Analytics API**: http://localhost:9081
+- **Grafana Dashboard**: http://localhost:3002 (admin/admin)
+- **ClickHouse**: http://localhost:8123
 
 ### 4. Ingest Documents
 
@@ -197,11 +201,10 @@ mypy src
 │   ├── pyproject.toml       # Python dependencies & config
 │   ├── langgraph.json       # LangGraph Server configuration
 │   ├── Dockerfile.dev       # Backend container
-│   ├── storage/             # FAISS index & conversation logs
+│   ├── storage/             # FAISS index & analytics data
 │   └── src/
 │       ├── agent/
 │       │   ├── graph.py         # LangGraph agent with tools
-│       │   ├── analytics.py     # Conversation logging
 │       │   └── security.py      # Rate limiting & validation
 │       ├── ingestion/
 │       │   ├── ingest.py        # Main ingestion orchestrator
@@ -210,6 +213,12 @@ mypy src
 │       │   ├── embeddings.py    # OpenAI embeddings
 │       │   ├── vectorstore.py   # FAISS operations
 │       │   └── manifest.py      # Document tracking manifest
+│       ├── analytics/
+│       │   ├── api.py           # Analytics REST API endpoints
+│       │   ├── clickhouse_analytics.py  # ClickHouse integration
+│       │   ├── init-db.sql      # Database schema
+│       │   └── grafana-provisioning/   # Grafana dashboards
+│       ├── analytics_server.py  # Standalone analytics server
 │       ├── middleware/           # FastAPI middleware
 │       └── config.py            # Configuration management
 │
@@ -279,47 +288,59 @@ docker compose exec langgraph-server python -m src.ingestion.ingest --pdf-dir /a
 docker compose exec langgraph-server /bin/bash
 ```
 
-## � Analytics & Monitoring
+## 📊 Analytics & Monitoring
 
-## 📊 Conversation Logging
+### Real-Time Analytics Dashboard
 
-The project includes automatic conversation logging for tracking and analysis.
+The project includes a comprehensive analytics system powered by ClickHouse and Grafana:
 
-### Storage Format
+**Features:**
+- Real-time message metrics and response times
+- User engagement and session tracking
+- Tool usage statistics
+- Error monitoring and alerting
+- Performance percentiles (p50, p90, p95, p99)
+- Token usage tracking
 
-All conversations are automatically logged to JSONL files organized by date:
-
-```
-./backend/storage/conversations/
-  ├── conversations_2024-01-15.jsonl
-  ├── conversations_2024-01-16.jsonl
-  └── conversations_2024-01-17.jsonl
-```
-
-### Logged Information
-
-Each conversation entry includes:
-- **timestamp**: When the conversation occurred
-- **thread_id**: Unique conversation thread identifier  
-- **user_id**: Unique user session identifier
-- **user_message**: User's question or input
-- **assistant_response**: AI's response
-- **metadata**: Model used, token usage, tool calls, etc.
-
-### Accessing Logs
-
+**Access Grafana Dashboard:**
 ```bash
-# View today's conversations
-docker compose exec langgraph-server cat /app/storage/conversations/conversations_$(date +%Y-%m-%d).jsonl
-
-# Parse with jq for better formatting
-docker compose exec langgraph-server sh -c "cat /app/storage/conversations/*.jsonl | jq"
-
-# Count conversations per day
-docker compose exec langgraph-server wc -l /app/storage/conversations/*.jsonl
+# Dashboard available at http://localhost:3002
+# Default credentials: admin/admin
 ```
 
-**Note**: Admin Dashboard and REST API endpoints for analytics are planned but not yet implemented.
+**Analytics API Endpoints:**
+```bash
+# Get metrics summary
+curl http://localhost:9081/analytics/metrics/summary?hours=24
+
+# Response time percentiles
+curl http://localhost:9081/analytics/metrics/response-time
+
+# Top active users
+curl http://localhost:9081/analytics/metrics/top-users?limit=10
+
+# Popular tools usage
+curl http://localhost:9081/analytics/metrics/popular-tools
+
+# Recent errors
+curl http://localhost:9081/analytics/metrics/recent-errors?limit=50
+```
+
+**What's Tracked:**
+- Chat messages (user & assistant)
+- Response times and token usage
+- Tool invocations and success rates
+- Session duration and activity
+- Errors and failures
+
+**Storage & Performance:**
+- ClickHouse columnar database
+- Optimized for analytical queries
+- Auto-cleanup after 90 days (TTL)
+- Handles millions of events/second
+- 10x+ data compression
+
+For detailed setup instructions, see [Analytics Setup Guide](backend/src/analytics/README.md).
 
 ## �🔒 Environment Variables
 
@@ -351,6 +372,19 @@ docker compose exec langgraph-server wc -l /app/storage/conversations/*.jsonl
 | `MAX_MESSAGE_LENGTH` | Max message length | `5000` |
 | `MAX_THREADS_PER_USER` | Max threads per user | `20` |
 
+**📊 Analytics Variables:**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CLICKHOUSE_HOST` | ClickHouse server host | `clickhouse` |
+| `CLICKHOUSE_PORT` | ClickHouse HTTP port | `8123` |
+| `CLICKHOUSE_USER` | ClickHouse username | `analytics` |
+| `CLICKHOUSE_PASSWORD` | ClickHouse password | `analytics_password` |
+| `CLICKHOUSE_DB` | ClickHouse database name | `analytics` |
+| `ANALYTICS_ENABLED` | Enable analytics tracking | `true` |
+| `GRAFANA_ADMIN_USER` | Grafana admin username | `admin` |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password | `admin` |
+
 **🎨 UI Customization:**
 
 | Variable | Description | Default |
@@ -375,6 +409,10 @@ docker compose exec langgraph-server wc -l /app/storage/conversations/*.jsonl
 - **Agent Chat UI**: Official LangChain chat interface
 - **Next.js**: React framework
 - **TypeScript**: Type safety
+
+### Analytics
+- **ClickHouse**: High-performance columnar database
+- **Grafana**: Visualization and monitoring platform
 
 ### Infrastructure
 - **Docker**: Containerization
