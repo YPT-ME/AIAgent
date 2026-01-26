@@ -9,8 +9,10 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies
 RUN corepack enable pnpm && pnpm install --frozen-lockfile
 
-# Copy source code
-COPY . .
+# Copy all source code and configuration files
+COPY tsconfig.json next.config.mjs postcss.config.mjs tailwind.config.js components.json ./
+COPY public ./public
+COPY src ./src
 
 # Build arguments - MUST be before ENV
 ARG NEXT_PUBLIC_API_URL=http://localhost:2024

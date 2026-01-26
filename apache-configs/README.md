@@ -10,7 +10,7 @@
 ### 1. Edit domains in config files
 
 ```bash
-# agent.conf: ServerName yourdomain.com
+# agentapp.conf: ServerName yourdomain.com
 # agentapi.conf: ServerName api.yourdomain.com
 ```
 
@@ -18,13 +18,13 @@
 
 ```bash
 # Copy configs
-sudo cp agent.conf agentapi.conf /etc/apache2/sites-available/
+sudo cp agentapp.conf agentapi.conf /etc/apache2/sites-available/
 
 # Enable modules
 sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
 
 # Enable sites
-sudo a2ensite agent.conf agentapi.conf
+sudo a2ensite agentapp.conf agentapi.conf
 
 # Test and reload
 sudo apache2ctl configtest
