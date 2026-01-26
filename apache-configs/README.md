@@ -10,21 +10,21 @@
 ### 1. Edit domains in config files
 
 ```bash
-# app.conf: ServerName yourdomain.com
-# api.conf: ServerName api.yourdomain.com
+# agent.conf: ServerName yourdomain.com
+# agentapi.conf: ServerName api.yourdomain.com
 ```
 
 ### 2. Install
 
 ```bash
 # Copy configs
-sudo cp app.conf api.conf /etc/apache2/sites-available/
+sudo cp agent.conf agentapi.conf /etc/apache2/sites-available/
 
 # Enable modules
 sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
 
 # Enable sites
-sudo a2ensite app.conf api.conf
+sudo a2ensite agent.conf agentapi.conf
 
 # Test and reload
 sudo apache2ctl configtest
