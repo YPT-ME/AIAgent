@@ -181,6 +181,18 @@ export function Thread() {
     e.preventDefault();
     if ((input.trim().length === 0 && contentBlocks.length === 0) || isLoading)
       return;
+    
+    // Input validation - prevent abuse
+    const MAX_MESSAGE_LENGTH = parseInt(process.env.NEXT_PUBLIC_MAX_MESSAGE_LENGTH || "5000");
+    if (input.length > MAX_MESSAGE_LENGTH) {
+      toast.error("Message too long", {
+        description: `Maximum message length is ${MAX_MESSAGE_LENGTH} characters. Current: ${input.length}`,
+        richColors: true,
+        closeButton: true,
+      });
+      return;
+    }
+    
     setFirstTokenReceived(false);
 
     const newHumanMessage: Message = {

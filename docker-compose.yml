@@ -25,6 +25,11 @@ services:
       CHUNK_OVERLAP: ${CHUNK_OVERLAP:-200}
       TOP_K: ${TOP_K:-5}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Security
+      LANGGRAPH_API_KEY: ${LANGGRAPH_API_KEY}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-10}
+      MAX_MESSAGE_LENGTH: ${MAX_MESSAGE_LENGTH:-5000}
+      MAX_THREADS_PER_USER: ${MAX_THREADS_PER_USER:-20}
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/langgraph.json:/app/langgraph.json:ro
@@ -50,6 +55,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:2024
         NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+        NEXT_PUBLIC_API_KEY: ${NEXT_PUBLIC_API_KEY}
         NEXT_PUBLIC_AGENT_NAME: ${NEXT_PUBLIC_AGENT_NAME:-Agent Chat}
         NEXT_PUBLIC_WELCOME_MESSAGE: ${NEXT_PUBLIC_WELCOME_MESSAGE:-}
         NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE: ${NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE:-true}
@@ -60,6 +66,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:2024
       NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+      NEXT_PUBLIC_API_KEY: ${NEXT_PUBLIC_API_KEY}
       NEXT_PUBLIC_AGENT_NAME: ${NEXT_PUBLIC_AGENT_NAME:-Agent Chat}
       NEXT_PUBLIC_WELCOME_MESSAGE: ${NEXT_PUBLIC_WELCOME_MESSAGE:-}
       NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE: ${NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE:-true}
