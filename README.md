@@ -41,11 +41,14 @@ A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **La
 
 - **LangGraph Server**: Production-ready agent server with built-in streaming support
 - **Agent Chat UI**: Official LangChain chat interface with thread management
-- **Document Ingestion**: Parse PDFs, chunk text, and embed into FAISS vector store
+- **Document Ingestion**: Parse PDFs & Markdown, chunk text, and embed into FAISS vector store
 - **Incremental Updates**: Only re-indexes documents that have changed (SHA256 hash tracking)
 - **Tool-Using Agent**: Agent with `search_documents` tool for knowledge base queries
 - **Streaming Responses**: Real-time token streaming via LangGraph Server protocol
 - **Citations**: Returns source documents with file names and page numbers
+- **Conversation Logging**: Automatic conversation tracking stored in JSONL format
+- **Security & Rate Limiting**: API key authentication, rate limiting per user
+- **User Session Tracking**: Unique user identification per browser session
 - **Production Ready**: Docker, linting, testing, type checking
 
 ## 📋 Prerequisites
@@ -131,26 +134,19 @@ langgraph dev
 
 The LangGraph Server will be available at http://localhost:2024
 
-### UI Setup (Agent Chat UI)
+### Frontend Setup (Agent Chat UI)
 
 ```bash
-cd ui
-
-# Option 1: Use npx to create Agent Chat UI
-npx create-agent-chat-app@latest .
-
-# Option 2: Clone official repository
-git clone https://github.com/langchain-ai/agent-chat-ui.git .
+cd frontend
 
 # Install dependencies
-npm install
+pnpm install
 
-# Configure environment
-cp .env.example .env.local
-# Edit .env.local if needed
+# Note: Environment variables are read from root .env file
+# No need for separate .env.local
 
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 The UI will be available at http://localhost:3000
@@ -191,33 +187,37 @@ mypy src
 /
 ├── README.md                 # This file
 ├── .gitignore               # Git ignore rules
-├── .env.example             # Environment variables template
+├── .env.example             # Environment variables template (SINGLE FILE)
 ├── docker-compose.yml       # Docker orchestration
 ├── Makefile                 # Common commands
 ├── data/
-│   └── pdfs/                # Place your PDF files here
+│   └── docs/                # Place your PDF/Markdown files here
 │
 ├── backend/
 │   ├── pyproject.toml       # Python dependencies & config
 │   ├── langgraph.json       # LangGraph Server configuration
-│   ├── Dockerfile           # Backend container
+│   ├── Dockerfile.dev       # Backend container
+│   ├── storage/             # FAISS index & conversation logs
 │   └── src/
 │       ├── agent/
-│       │   ├── __init__.py
-│       │   └── graph.py     # LangGraph agent with tools
+│       │   ├── graph.py         # LangGraph agent with tools
+│       │   ├── analytics.py     # Conversation logging
+│       │   └── security.py      # Rate limiting & validation
 │       ├── ingestion/
-│       │   ├── ingest.py    # Main ingestion orchestrator
-│       │   ├── loaders.py   # PDF document loaders (LlamaIndex)
-│       │   ├── chunking.py  # Text chunking (LangChain)
-│       │   ├── embeddings.py# OpenAI embeddings
-│       │   ├── vectorstore.py# FAISS operations
-│       │   └── manifest.py  # Document tracking manifest
-│       └── config.py        # Configuration management
+│       │   ├── ingest.py        # Main ingestion orchestrator
+│       │   ├── loaders.py       # PDF/Markdown loaders (LlamaIndex)
+│       │   ├── chunking.py      # Text chunking (LangChain)
+│       │   ├── embeddings.py    # OpenAI embeddings
+│       │   ├── vectorstore.py   # FAISS operations
+│       │   └── manifest.py      # Document tracking manifest
+│       ├── middleware/           # FastAPI middleware
+│       └── config.py            # Configuration management
 │
-└── ui/
-    ├── README.md            # UI setup instructions
-    ├── .env.example         # UI environment template
-    └── Dockerfile           # UI container (for Agent Chat UI)
+└── frontend/
+    ├── src/                 # Next.js source code
+    ├── components.json      # shadcn/ui configuration
+    ├── Dockerfile           # Frontend container
+    └── package.json         # Node dependencies
 ```
 
 ## 🔌 API Endpoints (LangGraph Server)
@@ -279,20 +279,86 @@ docker compose exec langgraph-server python -m src.ingestion.ingest --pdf-dir /a
 docker compose exec langgraph-server /bin/bash
 ```
 
-## 🔒 Environment Variables
+## � Analytics & Monitoring
+
+## 📊 Conversation Logging
+
+The project includes automatic conversation logging for tracking and analysis.
+
+### Storage Format
+
+All conversations are automatically logged to JSONL files organized by date:
+
+```
+./backend/storage/conversations/
+  ├── conversations_2024-01-15.jsonl
+  ├── conversations_2024-01-16.jsonl
+  └── conversations_2024-01-17.jsonl
+```
+
+### Logged Information
+
+Each conversation entry includes:
+- **timestamp**: When the conversation occurred
+- **thread_id**: Unique conversation thread identifier  
+- **user_id**: Unique user session identifier
+- **user_message**: User's question or input
+- **assistant_response**: AI's response
+- **metadata**: Model used, token usage, tool calls, etc.
+
+### Accessing Logs
+
+```bash
+# View today's conversations
+docker compose exec langgraph-server cat /app/storage/conversations/conversations_$(date +%Y-%m-%d).jsonl
+
+# Parse with jq for better formatting
+docker compose exec langgraph-server sh -c "cat /app/storage/conversations/*.jsonl | jq"
+
+# Count conversations per day
+docker compose exec langgraph-server wc -l /app/storage/conversations/*.jsonl
+```
+
+**Note**: Admin Dashboard and REST API endpoints for analytics are planned but not yet implemented.
+
+## �🔒 Environment Variables
+
+**🔑 Required Variables:**
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | OpenAI API key (required) | - |
+| `LANGGRAPH_API_KEY` | LangGraph Server API key (min 32 chars) | - |
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:2024` |
+| `NEXT_PUBLIC_ASSISTANT_ID` | Assistant ID | `rag_agent` |
+| `NEXT_PUBLIC_API_KEY` | Frontend API key (same as LANGGRAPH_API_KEY) | - |
+
+**⚙️ Configuration Variables:**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
 | `OPENAI_MODEL` | Chat model | `gpt-4o-mini` |
 | `OPENAI_EMBEDDING_MODEL` | Embedding model | `text-embedding-3-small` |
+| `TOP_K` | Number of documents to retrieve | `5` |
 | `FAISS_INDEX_PATH` | FAISS index directory | `./storage/faiss` |
 | `MANIFEST_PATH` | Manifest file path | `./storage/manifest.json` |
-| `PDF_DIR` | PDF documents directory | `./data/pdfs` |
+| `DOCS_DIR` | Documents directory | `./data/docs` |
+| `PDF_DIR` | PDF documents directory | `./data/docs` |
 | `CHUNK_SIZE` | Text chunk size | `1000` |
 | `CHUNK_OVERLAP` | Chunk overlap | `200` |
-| `TOP_K` | Number of documents to retrieve | `5` |
 | `LOG_LEVEL` | Logging level | `INFO` |
+| `RATE_LIMIT_PER_MINUTE` | Rate limit per user | `10` |
+| `MAX_MESSAGE_LENGTH` | Max message length | `5000` |
+| `MAX_THREADS_PER_USER` | Max threads per user | `20` |
+
+**🎨 UI Customization:**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_AGENT_NAME` | Agent display name | `Agent Chat` |
+| `NEXT_PUBLIC_WELCOME_MESSAGE` | Welcome message | - |
+| `NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE` | Show tool calls toggle | `true` |
+| `NEXT_PUBLIC_SHOW_FILE_UPLOAD` | Enable file upload | `true` |
 
 ## 📚 Technology Stack
 
