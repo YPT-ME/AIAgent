@@ -53,8 +53,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:2024
-        NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:2024}
+        NEXT_PUBLIC_ASSISTANT_ID: ${NEXT_PUBLIC_ASSISTANT_ID:-rag_agent}
         NEXT_PUBLIC_API_KEY: ${NEXT_PUBLIC_API_KEY}
         NEXT_PUBLIC_AGENT_NAME: ${NEXT_PUBLIC_AGENT_NAME:-Agent Chat}
         NEXT_PUBLIC_WELCOME_MESSAGE: ${NEXT_PUBLIC_WELCOME_MESSAGE:-}
@@ -64,8 +64,8 @@ services:
     ports:
       - "3001:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:2024
-      NEXT_PUBLIC_ASSISTANT_ID: rag_agent
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:2024}
+      NEXT_PUBLIC_ASSISTANT_ID: ${NEXT_PUBLIC_ASSISTANT_ID:-rag_agent}
       NEXT_PUBLIC_API_KEY: ${NEXT_PUBLIC_API_KEY}
       NEXT_PUBLIC_AGENT_NAME: ${NEXT_PUBLIC_AGENT_NAME:-Agent Chat}
       NEXT_PUBLIC_WELCOME_MESSAGE: ${NEXT_PUBLIC_WELCOME_MESSAGE:-}
