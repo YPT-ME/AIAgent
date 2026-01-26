@@ -47,6 +47,14 @@ class Settings(BaseSettings):
     # Logging Configuration
     log_level: str = "INFO"
     
+    # Analytics Configuration (ClickHouse)
+    clickhouse_host: str = "clickhouse"
+    clickhouse_port: int = 8123
+    clickhouse_user: str = "analytics"
+    clickhouse_password: str = "analytics_password"
+    clickhouse_db: str = "analytics"
+    analytics_enabled: bool = True
+    
     @property
     def faiss_index_dir(self) -> Path:
         """Get FAISS index directory as Path object."""

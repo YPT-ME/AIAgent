@@ -10,10 +10,13 @@ The agent:
 2. Retrieves relevant documents from the FAISS vector store
 3. Generates answers with citations using OpenAI
 4. Streams responses back through LangGraph Server
+5. Tracks analytics metrics for monitoring and optimization
 """
 
 import logging
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated, Any, Literal
 
 from langchain_core.documents import Document
@@ -28,6 +31,63 @@ from langgraph.prebuilt import ToolNode
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Thread pool for async analytics tracking
+_analytics_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="analytics")
+
+# Analytics API configuration
+ANALYTICS_API_URL = os.getenv("ANALYTICS_API_URL", "http://analytics-api:8080")
+
+
+# =============================================================================
+# Analytics Integration (via HTTP API)
+# =============================================================================
+
+def track_tool_call_http(thread_id: str, tool_name: str, duration_ms: int, success: bool, error_message: str = None):
+    """Track tool call via HTTP API in background."""
+    try:
+        import httpx
+        url = f"{ANALYTICS_API_URL}/analytics/track/tool"
+        logger.info(f"🔵 Tracking tool to {url}: tool={tool_name}, success={success}")
+        with httpx.Client(timeout=2.0) as client:
+            response = client.post(
+                url,
+                json={
+                    "thread_id": thread_id,
+                    "tool_name": tool_name,
+                    "duration_ms": duration_ms,
+                    "success": success,
+                    "error_message": error_message
+                }
+            )
+            logger.info(f"✅ Tool tracking successful: status={response.status_code}")
+    except Exception as e:
+        logger.error(f"❌ Failed to track tool call: {e}")
+
+
+def track_message_http(thread_id: str, user_id: str, message_type: str, content: str, 
+                       tokens: int, duration_ms: int, model: str):
+    """Track message via HTTP API in background."""
+    try:
+        import httpx
+        url = f"{ANALYTICS_API_URL}/analytics/track/message"
+        logger.info(f"🔵 Tracking message to {url}: thread={thread_id}, type={message_type}")
+        with httpx.Client(timeout=2.0) as client:
+            response = client.post(
+                url,
+                json={
+                    "thread_id": thread_id,
+                    "user_id": user_id or "anonymous",
+                    "message_type": message_type,
+                    "content_length": len(content),
+                    "tokens": tokens,
+                    "duration_ms": duration_ms,
+                    "model": model
+                }
+            )
+            logger.info(f"✅ Tracking successful: status={response.status_code}")
+    except Exception as e:
+        logger.error(f"❌ Failed to track message: {e}")
 
 
 # =============================================================================
@@ -163,16 +223,23 @@ def search_documents(query: str) -> str:
     """
     logger.info(f"Searching for: {query[:100]}...")
     
-    vectorstore = get_or_create_vectorstore()
-    
-    if vectorstore is None:
-        return "The knowledge base is not available. Please ensure documents have been ingested first using the rag-ingest command."
+    # Track tool call start time
+    start_time = time.time()
+    success = False
+    error_message = None
     
     try:
+        vectorstore = get_or_create_vectorstore()
+        
+        if vectorstore is None:
+            error_message = "Knowledge base not available"
+            return "The knowledge base is not available. Please ensure documents have been ingested first using the rag-ingest command."
+        
         # Perform similarity search with scores
         results = vectorstore.similarity_search_with_score(query=query, k=TOP_K)
         
         if not results:
+            success = True
             return "No relevant documents found for your query."
         
         # Format results
@@ -196,11 +263,28 @@ def search_documents(query: str) -> str:
             
             formatted_results.append(f"{source_ref}\n\nContent:\n{doc.page_content}\n")
         
+        success = True
         return "\n---\n".join(formatted_results)
         
     except Exception as e:
         logger.error(f"Search error: {e}")
+        error_message = str(e)
         return f"An error occurred while searching: {str(e)}"
+    
+    finally:
+        # Track tool call metrics via HTTP API in background thread
+        duration_ms = int((time.time() - start_time) * 1000)
+        # Note: thread_id would ideally come from context, but LangGraph tools don't easily access it
+        # For now using "unknown" - the analytics still track tool usage patterns
+        thread_id = "unknown"
+        _analytics_executor.submit(
+            track_tool_call_http,
+            thread_id,
+            "search_documents",
+            duration_ms,
+            success,
+            error_message
+        )
 
 
 # =============================================================================
@@ -240,12 +324,13 @@ def should_continue(state: MessagesState) -> Literal["tools", END]:
     return END
 
 
-def call_model(state: MessagesState) -> dict[str, Any]:
+def call_model(state: MessagesState, config: dict = None) -> dict[str, Any]:
     """
     Call the LLM model with the current messages.
     
     Args:
         state: Current message state with conversation history
+        config: Runtime configuration with thread_id, user_id, etc.
         
     Returns:
         Updated state with AI response
@@ -256,10 +341,47 @@ def call_model(state: MessagesState) -> dict[str, Any]:
     if not messages or not isinstance(messages[0], SystemMessage):
         messages = [SystemMessage(content=RAG_SYSTEM_PROMPT)] + list(messages)
     
-    # Call the model
-    response = llm.invoke(messages)
+    # Track response start time
+    start_time = time.time()
     
-    return {"messages": [response]}
+    try:
+        # Call the model
+        response = llm.invoke(messages)
+        
+        # Track analytics for assistant response in background thread
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        # Extract thread_id from config (passed by LangGraph runtime)
+        config = config or {}
+        configurable = config.get("configurable", {})
+        thread_id = configurable.get("thread_id", "unknown")
+        user_id = configurable.get("user_id")
+        
+        logger.info(f"📋 Config debug: config={config}, thread_id={thread_id}")
+        
+        # Count tokens (approximate)
+        tokens = len(response.content) // 4 if response.content else 0
+        
+        _analytics_executor.submit(
+            track_message_http,
+            thread_id,
+            user_id,
+            "assistant",
+            response.content or "",
+            tokens,
+            duration_ms,
+            OPENAI_MODEL
+        )
+        
+        return {"messages": [response]}
+    
+    except Exception as e:
+        logger.error(f"Model call error: {e}")
+        
+        # Track error in background thread (simplified - no async complexity)
+        logger.debug(f"Model call failed: {e}")
+        
+        raise
 
 
 # Create the tool node

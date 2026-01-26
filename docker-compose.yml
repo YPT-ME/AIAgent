@@ -30,6 +30,13 @@ services:
       RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-10}
       MAX_MESSAGE_LENGTH: ${MAX_MESSAGE_LENGTH:-5000}
       MAX_THREADS_PER_USER: ${MAX_THREADS_PER_USER:-20}
+      # Analytics
+      CLICKHOUSE_HOST: ${CLICKHOUSE_HOST:-clickhouse}
+      CLICKHOUSE_PORT: ${CLICKHOUSE_PORT:-8123}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-analytics}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-analytics_password}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
+      ANALYTICS_ENABLED: ${ANALYTICS_ENABLED:-true}
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/langgraph.json:/app/langgraph.json:ro
@@ -78,6 +85,102 @@ services:
     networks:
       - rag-network
 
+  # =============================================================================
+  # Analytics API Server
+  # =============================================================================
+  analytics-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: rag-analytics-api
+    ports:
+      - "9081:8080"
+    environment:
+      CLICKHOUSE_HOST: ${CLICKHOUSE_HOST:-clickhouse}
+      CLICKHOUSE_PORT: ${CLICKHOUSE_PORT:-8123}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-analytics}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-analytics_password}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
+      ANALYTICS_PORT: 8080
+    command: python -m src.analytics_server
+    volumes:
+      - ./backend/src:/app/src:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # =============================================================================
+  # ClickHouse - High-Performance Analytics Database
+  # =============================================================================
+  clickhouse:
+    image: clickhouse/clickhouse-server:24-alpine
+    container_name: rag-clickhouse
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native interface
+    environment:
+      CLICKHOUSE_DB: analytics
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-analytics}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-analytics_password}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./backend/src/analytics/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # =============================================================================
+  # Grafana - Analytics Dashboard
+  # =============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rag-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-clickhouse-datasource
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+      GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONYMOUS:-false}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./backend/src/analytics/grafana-provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - rag-network
+
 networks:
   rag-network:
     driver: bridge
+
+volumes:
+  clickhouse_data:
+    driver: local
+  grafana_data:
+    driver: local
