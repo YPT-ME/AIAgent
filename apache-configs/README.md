@@ -2,8 +2,10 @@
 
 ## Architecture
 
-- `yourdomain.com` → Chat UI (port 3001)
-- `api.yourdomain.com` → Backend API (port 2024)
+- **Port 80**: Serves `/var/www/html` for Let's Encrypt SSL challenges and redirects HTTP → HTTPS
+- **Port 443**: SSL reverse proxy
+  - `yourdomain.com` → Chat UI (port 3001)
+  - `api.yourdomain.com` → Backend API (port 2024)
 
 ## Quick Setup
 
@@ -14,24 +16,38 @@
 # agentapi.conf: ServerName api.yourdomain.com
 ```
 
-### 2. Install
+### 2. Install Apache configs
 
 ```bash
 # Copy configs
 sudo cp agentapp.conf agentapi.conf /etc/apache2/sites-available/
 
-# Enable modules
-sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
+# Enable required modules
+sudo a2enmod ssl proxy proxy_http proxy_wstunnel rewrite headers
 
 # Enable sites
 sudo a2ensite agentapp.conf agentapi.conf
 
-# Test and reload
+# Test configuration
 sudo apache2ctl configtest
+```
+
+### 3. Generate SSL certificates with Let's Encrypt
+
+```bash
+# Install certbot if not already installed
+sudo apt update && sudo apt install certbot python3-certbot-apache -y
+
+# Generate certificates (no email prompt, auto HTTP→HTTPS redirect)
+sudo certbot --apache --non-interactive --agree-tos --register-unsafely-without-email --redirect -d avideoagent.ypt.me -d avideoagentapi.ypt.me
+
+# Reload Apache
 sudo systemctl reload apache2
 ```
 
-### 3. Update .env
+**Note**: Certbot will automatically configure the SSL certificates in the Apache configs.
+
+### 4. Update .env
 
 ```env
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
@@ -40,34 +56,21 @@ NEXT_PUBLIC_API_KEY=your-secret-key
 NEXT_PUBLIC_ASSISTANT_ID=rag_agent
 ```
 
-### 4. Start Docker
+### 5. Start Docker
 
 ```bash
 docker compose up -d --build agent-chat-ui
 ```
 
-## Cloudflare Setup
+## SSL Certificate Renewal
 
-### DNS
-- Type: `A` | Name: `@` | IP: `YOUR_IP` | Proxy: ON
-- Type: `A` | Name: `api` | IP: `YOUR_IP` | Proxy: ON
+Certbot auto-renews certificates. To test renewal:
 
-### Settings
-- SSL/TLS → **Flexible** (no server cert needed)
-- Network → **WebSockets: ON**
-
-### SSL Options
-
-**Flexible** (recommended):
-- No server certificates required
-- Use configs as-is
-
-**Full/Full Strict**:
 ```bash
-sudo a2enmod ssl
-sudo certbot --apache -d yourdomain.com -d api.yourdomain.com
-# Uncomment <VirtualHost *:443> sections in configs
+sudo certbot renew --dry-run
 ```
+
+Renewal happens automatically via systemd timer.
 
 ## Troubleshooting
 
