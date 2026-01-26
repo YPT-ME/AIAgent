@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-01-26T00:46:09.186188",
+  "last_updated": "2026-01-26T00:48:13.101904",
   "documents": {
     "/app/data/docs/About-AVideo-Platform-Mobile-app.md": {
       "filename": "About-AVideo-Platform-Mobile-app.md",
@@ -1729,6 +1729,15 @@
       "chunk_count": 7,
       "file_size": 75727,
       "page_count": 3
+    },
+    "/app/data/docs/TEST_AUTO_INGEST.md": {
+      "filename": "TEST_AUTO_INGEST.md",
+      "filepath": "/app/data/docs/TEST_AUTO_INGEST.md",
+      "file_hash": "a3d6dd4e1fe6ce0635974566455295e0953107b7d37bc3424de4ef74de9b1b8f",
+      "last_indexed_at": "2026-01-26T00:48:10.042465",
+      "chunk_count": 1,
+      "file_size": 777,
+      "page_count": 1
     }
   }
 }
