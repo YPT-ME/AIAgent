@@ -27,6 +27,10 @@ COPY ./langgraph.json ./langgraph.json
 # Create storage directories
 RUN mkdir -p /app/storage/faiss /app/data/pdfs
 
+# Copy and setup entrypoint script
+COPY ./entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -38,6 +42,9 @@ EXPOSE 2024
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:2024/health || exit 1
+
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Run LangGraph Server in development mode (with auto-reload)
 CMD ["langgraph", "dev", "--host", "0.0.0.0", "--port", "2024"]

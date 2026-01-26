@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-01-25T03:17:05.481125",
+  "last_updated": "2026-01-26T00:46:09.186188",
   "documents": {
     "/app/data/docs/About-AVideo-Platform-Mobile-app.md": {
       "filename": "About-AVideo-Platform-Mobile-app.md",
@@ -1697,10 +1697,10 @@
     "/app/data/docs/_Footer.md": {
       "filename": "_Footer.md",
       "filepath": "/app/data/docs/_Footer.md",
-      "file_hash": "9bee7281ffbb4588544e55e84784563a3a5d427db87de9c47fc27765b1b95023",
-      "last_indexed_at": "2026-01-25T03:16:56.610575",
-      "chunk_count": 1,
-      "file_size": 355,
+      "file_hash": "7b939c9fb22f741e46ca938704d6ee410b19cccf26adc59cf6a840dabdc6390c",
+      "last_indexed_at": "2026-01-26T00:45:14.626238",
+      "chunk_count": 3,
+      "file_size": 1828,
       "page_count": 1
     },
     "/app/data/docs/Plugins _ YouTube Clone, YouTube Clone Script, Netflix Clone, Netflix Clone Script, PHP, Open Source, Video Streaming Software _ YouPHPTube.pdf": {
@@ -1711,6 +1711,24 @@
       "chunk_count": 18,
       "file_size": 847592,
       "page_count": 10
+    },
+    "/app/data/docs/demo sites.pdf": {
+      "filename": "demo sites.pdf",
+      "filepath": "/app/data/docs/demo sites.pdf",
+      "file_hash": "e0e23831d88c30c57fdec3664b953a64e916c680d2434871b4f0f67118d977e6",
+      "last_indexed_at": "2026-01-26T00:45:14.761554",
+      "chunk_count": 1,
+      "file_size": 14915,
+      "page_count": 1
+    },
+    "/app/data/docs/Free plugins.pdf": {
+      "filename": "Free plugins.pdf",
+      "filepath": "/app/data/docs/Free plugins.pdf",
+      "file_hash": "c3f8be44049770a08056f56abf3de7e3480258a5239fdda4f5a4a2edf6fe40fa",
+      "last_indexed_at": "2026-01-26T00:45:14.988839",
+      "chunk_count": 7,
+      "file_size": 75727,
+      "page_count": 3
     }
   }
 }
