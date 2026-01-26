@@ -45,7 +45,11 @@ sudo certbot --apache --non-interactive --agree-tos --register-unsafely-without-
 sudo systemctl reload apache2
 ```
 
-**Note**: Certbot will automatically configure the SSL certificates in the Apache configs.
+**Note**: Certbot will:
+1. Generate SSL certificates
+2. Automatically create VirtualHost *:443 sections with SSL configuration
+3. Set up HTTP→HTTPS redirect
+4. Preserve your proxy settings in the HTTPS configuration
 
 ### 4. Update .env
 
