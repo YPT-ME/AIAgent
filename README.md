@@ -282,7 +282,14 @@ If this project helped you, please:
 - **Issues**: [GitHub Issues](https://github.com/YPT-ME/AIAgent/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/YPT-ME/AIAgent/discussions)
 
-## 🙏 Acknowledgments
+## �‍💻 About the Author
+
+**Daniel Neto** - Full-stack developer specializing in AI/ML applications and video platform solutions.
+
+- 🔗 GitHub: [@DanielnetoDotCom](https://github.com/DanielnetoDotCom)
+- 💼 Project Maintainer & Lead Developer
+
+## �🙏 Acknowledgments
 
 - [LangChain](https://langchain.com/) - LLM application framework
 - [LangGraph](https://langchain-ai.github.io/langgraph/) - Agent orchestration
@@ -292,6 +299,12 @@ If this project helped you, please:
 - [OpenAI](https://openai.com/) - LLM provider
 - [ClickHouse](https://clickhouse.com/) - Analytics database
 - [Grafana](https://grafana.com/) - Monitoring dashboards
+
+---
+
+## 🏷️ Keywords & Topics
+
+`RAG` `Retrieval-Augmented-Generation` `AI-Agent` `LangChain` `LangGraph` `OpenAI` `GPT-4` `LLM` `Chatbot` `Virtual-Assistant` `Document-QA` `Knowledge-Base` `Vector-Database` `FAISS` `Embeddings` `Semantic-Search` `LlamaIndex` `Python` `TypeScript` `Next.js` `Docker` `Microservices` `ClickHouse` `Grafana` `Analytics` `Real-Time` `Streaming` `WebSocket` `Enterprise-AI` `Production-Ready` `Chat-UI` `PDF-Parser` `Markdown` `NLP` `Machine-Learning` `AI-Application` `Conversational-AI` `LangGraph-Server` `FastAPI` `React` `Full-Stack` `DevOps` `Monitoring` `Observability`
 
 ---
 
