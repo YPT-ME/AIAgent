@@ -1,8 +1,27 @@
 # RAG AI Agent Monorepo
 
-A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **LangGraph Server**, **LangChain**, **LlamaIndex**, **FAISS**, and **OpenAI**. Features the official **Agent Chat UI** from LangChain.
+A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **LangGraph Server**, **LangChain**, **LlamaIndex**, **FAISS**, and **OpenAI**. Features the official **Agent Chat UI** from LangChain with comprehensive analytics and monitoring.
+
+> **Perfect for learning:** This project demonstrates modern AI agent architecture, RAG implementation, and production-ready patterns for building conversational AI applications.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Node.js 18+](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+
+## ✨ Key Features
+
+- 🤖 **Production-Ready Agent**: LangGraph-powered agent with streaming responses
+- 📚 **Smart RAG Pipeline**: Incremental document processing with FAISS vector search
+- 💬 **Modern Chat UI**: Official LangChain Agent Chat interface
+- 📊 **Real-Time Analytics**: ClickHouse + Grafana monitoring dashboard
+- 🔒 **Enterprise Security**: API authentication, rate limiting, input validation
+- 🐳 **Docker Ready**: Complete containerized deployment
+- 🚀 **Easy Setup**: Single `.env` configuration for all services
 
 ## 🏗️ Architecture
+
+See detailed architecture documentation in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -77,11 +96,16 @@ cp .env.example .env
 
 **Note**: All environment variables are now centralized in the root `.env` file. No need for separate `.env` files in `backend/` or `ui/` directories.
 
-### 2. Add PDF Documents
+### 2. Add Your Documents
+
+**Important:** Add your documents BEFORE starting the services for automatic ingestion.
 
 ```bash
-# Add your PDF files to data/docs/ or data/pdfs/
+# Add your PDF or Markdown files to data/docs/
 cp your-documents.pdf data/docs/
+cp your-documentation.md data/docs/
+
+# Supported formats: PDF (.pdf) and Markdown (.md)
 ```
 
 ### 3. Run with Docker Compose (Recommended)
@@ -101,14 +125,16 @@ The services will be available at:
 - **Grafana Dashboard**: http://localhost:3002 (admin/admin)
 - **ClickHouse**: http://localhost:8123
 
-### 4. Ingest Documents
+**Note:** Documents in `data/docs/` are automatically ingested on first startup!
+
+### 4. Verify Ingestion (Optional)
 
 ```bash
-# Via CLI inside the container
-docker compose exec langgraph-server python -m src.ingestion.ingest --pdf-dir /app/data/pdfs
-
 # Check ingestion status
 docker compose exec langgraph-server python -m src.ingestion.ingest --status
+
+# Manually re-ingest documents if needed
+docker compose exec langgraph-server python -m src.ingestion.ingest --docs-dir /app/data/docs
 ```
 
 ## 🔧 Local Development
@@ -129,8 +155,11 @@ pip install -e ".[dev]"
 cp ../.env.example .env
 # Edit .env and add your OPENAI_API_KEY
 
+# Add documents first!
+cp your-documents.pdf ../data/docs/
+
 # Run ingestion
-python -m src.ingestion.ingest --pdf-dir ../data/pdfs
+python -m src.ingestion.ingest --docs-dir ../data/docs
 
 # Start LangGraph development server
 langgraph dev
@@ -194,13 +223,19 @@ mypy src
 ├── .env.example             # Environment variables template (SINGLE FILE)
 ├── docker-compose.yml       # Docker orchestration
 ├── Makefile                 # Common commands
+├── LICENSE                  # MIT License
+├── CONTRIBUTING.md          # Contribution guidelines
+├── SECURITY.md              # Security policy
+├── ARCHITECTURE.md          # Detailed technical documentation
 ├── data/
-│   └── docs/                # Place your PDF/Markdown files here
+│   └── docs/                # Place your PDF and Markdown files here
 │
 ├── backend/
 │   ├── pyproject.toml       # Python dependencies & config
 │   ├── langgraph.json       # LangGraph Server configuration
 │   ├── Dockerfile.dev       # Backend container
+│   ├── system_prompt.txt    # Agent's system prompt (customize here!)
+│   ├── system_prompt.example.txt  # Example system prompt template
 │   ├── storage/             # FAISS index & analytics data
 │   └── src/
 │       ├── agent/
@@ -228,6 +263,30 @@ mypy src
     ├── Dockerfile           # Frontend container
     └── package.json         # Node dependencies
 ```
+
+## 🎨 Customizing the Agent
+
+You can customize your agent's behavior by creating your own system prompt:
+
+```bash
+# Copy the example template
+cp backend/system_prompt.example.txt backend/system_prompt.txt
+
+# Edit with your custom instructions
+nano backend/system_prompt.txt
+
+# Restart the backend to apply changes
+docker compose restart langgraph-server
+```
+
+**What you can customize:**
+- Agent's personality and tone
+- How it handles different types of questions
+- Citation formats and source references
+- Specific domain knowledge or rules
+- Response style and structure
+
+If `backend/system_prompt.txt` doesn't exist, the agent will automatically use [backend/system_prompt.example.txt](backend/system_prompt.example.txt) as a fallback.
 
 ## 🔌 API Endpoints (LangGraph Server)
 
@@ -281,8 +340,8 @@ docker compose down
 docker compose build langgraph-server
 docker compose up langgraph-server
 
-# Run ingestion
-docker compose exec langgraph-server python -m src.ingestion.ingest --pdf-dir /app/data/pdfs
+# Run ingestion (if not done automatically)
+docker compose exec langgraph-server python -m src.ingestion.ingest --docs-dir /app/data/docs
 
 # Access container shell
 docker compose exec langgraph-server /bin/bash
@@ -435,15 +494,44 @@ pytest tests/test_agent.py::test_search_tool -v
 
 ## 🤝 Contributing
 
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
+
+### Quick Contribution Steps
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
+3. Commit changes (`git commit -m 'feat: add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## 🔒 Security
+
+Security is important to us. Please review our [Security Policy](SECURITY.md) for:
+- Reporting vulnerabilities
+- Security best practices
+- API key management
+- Production security guidelines
+
+**⚠️ Important:** Never commit your `.env` file with real API keys!
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🌟 Show Your Support
+
+If this project helped you, please:
+- ⭐ Star this repository
+- 🐛 Report bugs and suggest features
+- 🤝 Contribute code improvements
+- 📖 Share with others learning AI development
+
+## 📞 Contact & Discussion
+
+- **Issues**: [GitHub Issues](https://github.com/YPT-ME/AIAgent/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YPT-ME/AIAgent/discussions)
 
 ## 🙏 Acknowledgments
 
@@ -453,3 +541,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [LlamaIndex](https://www.llamaindex.ai/) - Document parsing
 - [FAISS](https://github.com/facebookresearch/faiss) - Vector search
 - [OpenAI](https://openai.com/) - LLM provider
+- [ClickHouse](https://clickhouse.com/) - Analytics database
+- [Grafana](https://grafana.com/) - Monitoring dashboards
+
+---
+
+**Built with ❤️ for learning and demonstrating modern AI agent architectures**

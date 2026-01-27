@@ -137,12 +137,37 @@ def load_system_prompt() -> str:
 
 
 def _get_fallback_prompt() -> str:
-    """Minimal fallback prompt if file loading fails."""
-    return """You are a helpful assistant for AVideo Platform.
+    """
+    Load fallback prompt from example file.
     
-Answer questions about AVideo Platform using the available documentation.
-Always cite sources and provide accurate information.
-For complex issues, recommend contacting support at https://streamphp.com/marketplace/
+    Returns:
+        Fallback prompt from system_prompt.example.txt or hardcoded default
+    """
+    from pathlib import Path
+    
+    example_file = Path(__file__).parent.parent.parent / "system_prompt.example.txt"
+    
+    try:
+        if example_file.exists():
+            with open(example_file, "r", encoding="utf-8") as f:
+                content = f.read()
+                logger.info(f"Fallback prompt loaded from {example_file}")
+                return content
+        else:
+            logger.warning(f"Example prompt file not found at {example_file}, using hardcoded fallback")
+            return _get_hardcoded_fallback()
+    except Exception as e:
+        logger.error(f"Failed to load example prompt: {e}, using hardcoded fallback")
+        return _get_hardcoded_fallback()
+
+
+def _get_hardcoded_fallback() -> str:
+    """Hardcoded fallback if even the example file cannot be loaded."""
+    return """You are a helpful AI assistant with access to a knowledge base.
+
+Answer questions based on the documentation available through the search_documents tool.
+Always cite your sources and provide clear, accurate information.
+If you cannot find relevant information, be honest about it.
 """
 
 

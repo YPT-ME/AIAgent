@@ -136,6 +136,9 @@ Thumbs.db
 # Storage directory (contains runtime data - conversations, FAISS indexes, etc.)
 backend/storage/
 
+# System prompts (users customize their own)
+backend/system_prompt.txt
+
 # Node modules
 node_modules/
 npm-debug.log*
