@@ -109,9 +109,10 @@ export function AssistantMessage({
 }) {
   const content = message?.content ?? [];
   const contentString = getContentString(content);
+  const showToolCallsToggle = process.env.NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE === "true";
   const [hideToolCalls] = useQueryState(
     "hideToolCalls",
-    parseAsBoolean.withDefault(false),
+    parseAsBoolean.withDefault(!showToolCallsToggle), // Hide by default if toggle is disabled
   );
 
   const thread = useStreamContext();

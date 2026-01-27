@@ -98,10 +98,10 @@ export function Thread() {
   );
   
   // Tool calls toggle control
-  const showToolCallsToggle = process.env.NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE !== "false";
+  const showToolCallsToggle = process.env.NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE === "true";
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
-    parseAsBoolean.withDefault(!showToolCallsToggle), // If toggle is hidden, always hide tool calls
+    parseAsBoolean.withDefault(!showToolCallsToggle), // If toggle is disabled, hide tool calls by default
   );
   
   // File upload control
