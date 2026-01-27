@@ -1,29 +1,27 @@
 # RAG AI Agent Monorepo
 
-A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **LangGraph Server**, **LangChain**, **LlamaIndex**, **FAISS**, and **OpenAI**. Features the official **Agent Chat UI** from LangChain with comprehensive analytics and monitoring.
+A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **LangGraph Server**, **LangChain**, **LlamaIndex**, **FAISS**, and **OpenAI**. Features official **Agent Chat UI** with comprehensive analytics and monitoring.
 
-Build your own AI agent with custom knowledge base. This production-ready solution provides everything you need to deploy a conversational AI application with document retrieval capabilities.
+**Build your own AI agent with custom knowledge base** - Production-ready solution for deploying conversational AI applications with document retrieval capabilities.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Node.js 18+](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
 
-## 🎥 Live Demo
-
-See a live example of this RAG AI Agent in action:
-
-**[AVideo AI Agent](https://avideoagent.ypt.me/)** - An AI assistant specialized in the [AVideo Platform](https://github.com/WWBN/AVideo) documentation, demonstrating real-world RAG capabilities with a comprehensive knowledge base.
-
 ## 📸 Screenshots
 
-### Chat Interface
+### 💬 AI Chat Interface - Real-time Streaming Responses
 
 ![chrome-capture-2026-01-27](https://github.com/user-attachments/assets/66d22e77-f575-4304-bce4-7c22b1d9740a)
 
-### Analytics Dashboard
+### 📊 Analytics Dashboard - Performance Monitoring with Grafana
 
 <img width="1467" height="785" alt="image" src="https://github.com/user-attachments/assets/9580097d-91c5-4867-a317-1478b8ce25c4" />
+
+## 🎥 Live Demo
+
+**[Try it now: AVideo AI Agent](https://avideoagent.ypt.me/)** - A fully functional AI assistant specialized in the [AVideo Platform](https://github.com/WWBN/AVideo) documentation, demonstrating enterprise-grade RAG capabilities with 500+ documents indexed.
 
 ## ✨ Key Features
 
@@ -73,26 +71,21 @@ See detailed architecture documentation in [ARCHITECTURE.md](ARCHITECTURE.md).
                                                 └───────────────┘
 ```
 
-## 🚀 Features
+## � How It Works
 
-- **LangGraph Server**: Production-ready agent server with built-in streaming support
-- **Agent Chat UI**: Official LangChain chat interface with thread management
-- **Document Ingestion**: Parse PDFs & Markdown, chunk text, and embed into FAISS vector store
-- **Incremental Updates**: Only re-indexes documents that have changed (SHA256 hash tracking)
-- **Tool-Using Agent**: Agent with `search_documents` tool for knowledge base queries
-- **Streaming Responses**: Real-time token streaming via LangGraph Server protocol
-- **Citations**: Returns source documents with file names and page numbers
-- **Analytics Dashboard**: Real-time monitoring with ClickHouse + Grafana
-- **Performance Metrics**: Track response times, token usage, tool calls, and errors
-- **Security & Rate Limiting**: API key authentication, rate limiting per user
-- **Production Ready**: Docker, health checks, and auto-restart policies
+**Document Ingestion Pipeline:**
+1. PDF/Markdown → Extract text → Chunk into segments → Generate embeddings → Store in FAISS
+2. SHA256 hash tracking enables incremental updates (only changed files are re-processed)
+
+**RAG Agent Flow:**
+1. User question → LangGraph routes to agent → Agent uses `search_documents` tool
+2. FAISS similarity search → Retrieve relevant chunks → LLM generates answer with citations
+3. Response streams back to UI in real-time
 
 ## 📋 Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- Docker & Docker Compose
-- OpenAI API Key
+- **Docker & Docker Compose** (handles all dependencies)
+- **OpenAI API Key** ([Get one here](https://platform.openai.com/api-keys))
 
 ## 🛠️ Quick Start
 
@@ -100,7 +93,7 @@ See detailed architecture documentation in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/YPT-ME/AIAgent/
 cd AIAgent
 
 # Copy and configure the SINGLE .env file (at project root)
@@ -155,130 +148,9 @@ docker compose exec langgraph-server python -m src.ingestion.ingest --docs-dir /
 
 ## 🔧 Local Development
 
-### Backend Setup (LangGraph Server)
-
-```bash
-cd backend
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -e ".[dev]"
-
-# Copy and configure environment
-cp ../.env.example .env
-# Edit .env and add your OPENAI_API_KEY
-
-# Add documents first!
-cp your-documents.pdf ../data/docs/
-
-# Run ingestion
-python -m src.ingestion.ingest --docs-dir ../data/docs
-
-# Start LangGraph development server
-langgraph dev
-```
-
-The LangGraph Server will be available at http://localhost:2024
-
-### Frontend Setup (Agent Chat UI)
-
-```bash
-cd frontend
-
-# Install dependencies
-pnpm install
-
-# Note: Environment variables are read from root .env file
-# No need for separate .env.local
-
-# Start development server
-pnpm run dev
-```
-
-The UI will be available at http://localhost:3000
-
-### Run Tests
-
-```bash
-cd backend
-
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=src
-
-# Run specific test file
-pytest tests/test_ingestion.py -v
-```
-
-### Linting & Formatting
-
-```bash
-cd backend
-
-# Format code
-black src tests
-
-# Lint code
-ruff check src tests
-
-# Type checking
-mypy src
-```
-
-## 📁 Project Structure
-
-```
-/
-├── README.md                 # This file
-├── .gitignore               # Git ignore rules
-├── .env.example             # Environment variables template (SINGLE FILE)
-├── docker-compose.yml       # Docker orchestration
-├── Makefile                 # Common commands
-├── LICENSE                  # MIT License
-├── CONTRIBUTING.md          # Contribution guidelines
-├── SECURITY.md              # Security policy
-├── ARCHITECTURE.md          # Detailed technical documentation
-├── data/
-│   └── docs/                # Place your PDF and Markdown files here
-│
-├── backend/
-│   ├── pyproject.toml       # Python dependencies & config
-│   ├── langgraph.json       # LangGraph Server configuration
-│   ├── Dockerfile.dev       # Backend container
-│   ├── system_prompt.txt    # Agent's system prompt (customize here!)
-│   ├── system_prompt.example.txt  # Example system prompt template
-│   ├── storage/             # FAISS index & analytics data
-│   └── src/
-│       ├── agent/
-│       │   ├── graph.py         # LangGraph agent with tools
-│       │   └── security.py      # Rate limiting & validation
-│       ├── ingestion/
-│       │   ├── ingest.py        # Main ingestion orchestrator
-│       │   ├── loaders.py       # PDF/Markdown loaders (LlamaIndex)
-│       │   ├── chunking.py      # Text chunking (LangChain)
-│       │   ├── embeddings.py    # OpenAI embeddings
-│       │   ├── vectorstore.py   # FAISS operations
-│       │   └── manifest.py      # Document tracking manifest
-│       ├── analytics/
-│       │   ├── api.py           # Analytics REST API endpoints
-│       │   ├── clickhouse_analytics.py  # ClickHouse integration
-│       │   ├── init-db.sql      # Database schema
-│       │   └── grafana-provisioning/   # Grafana dashboards
-│       ├── analytics_server.py  # Standalone analytics server
-│       ├── middleware/           # FastAPI middleware
-│       └── config.py            # Configuration management
-│
-└── frontend/
-    ├── src/                 # Next.js source code
-    ├── components.json      # shadcn/ui configuration
-    ├── Dockerfile           # Frontend container
-    └── package.json         # Node dependencies
-```
+For detailed development setup, testing, and contribution guidelines, see:
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development workflows
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical deep dive
 
 ## 🎨 Customizing the Agent
 
@@ -304,223 +176,66 @@ docker compose restart langgraph-server
 
 If `backend/system_prompt.txt` doesn't exist, the agent will automatically use [backend/system_prompt.example.txt](backend/system_prompt.example.txt) as a fallback.
 
-## 🔌 API Endpoints (LangGraph Server)
+## 🔌 API Reference
 
-LangGraph Server automatically provides these endpoints:
+LangGraph Server provides RESTful endpoints for thread management, streaming responses, and health checks.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/runs/stream` | POST | Stream agent responses |
-| `/threads` | POST | Create conversation thread |
-| `/threads/{thread_id}` | GET | Get thread details |
-| `/threads/{thread_id}/runs` | POST | Start a new run |
+📚 [Full API Documentation](https://langchain-ai.github.io/langgraph/cloud/quick_start/)
 
-See the [LangGraph Server Documentation](https://langchain-ai.github.io/langgraph/cloud/quick_start/) for full API reference.
 
-## 🔄 How It Works
 
-### Document Ingestion Pipeline
-
-1. **PDF Loading**: LlamaIndex PDFReader extracts text with page metadata
-2. **Chunking**: LangChain RecursiveCharacterTextSplitter creates chunks
-3. **Embedding**: OpenAI text-embedding-3-small generates vectors
-4. **Storage**: FAISS stores vectors for fast similarity search
-5. **Manifest**: SHA256 hashes track processed files for incremental updates
-
-### RAG Agent Flow
-
-1. **User Message**: Received via Agent Chat UI
-2. **LangGraph Server**: Routes to the RAG agent graph
-3. **Agent Decision**: LLM decides to use `search_documents` tool
-4. **Document Retrieval**: FAISS similarity search returns relevant chunks
-5. **Answer Generation**: LLM generates answer with citations
-6. **Streaming Response**: Tokens streamed back to UI
-
-## 🐳 Docker Commands
+## 🐳 Useful Commands
 
 ```bash
-# Build and run all services
-docker compose up --build
-
-# Run in background
-docker compose up -d
-
 # View logs
 docker compose logs -f
 
-# Stop services
+# Restart services
+docker compose restart
+
+# Stop all services
 docker compose down
-
-# Rebuild specific service
-docker compose build langgraph-server
-docker compose up langgraph-server
-
-# Run ingestion (if not done automatically)
-docker compose exec langgraph-server python -m src.ingestion.ingest --docs-dir /app/data/docs
-
-# Access container shell
-docker compose exec langgraph-server /bin/bash
 ```
 
 ## 📊 Analytics & Monitoring
 
-### Real-Time Analytics Dashboard
+Built-in real-time analytics with **ClickHouse + Grafana**:
 
-The project includes a comprehensive analytics system powered by ClickHouse and Grafana:
+- 📈 Response times, token usage, tool calls
+- 👥 User engagement and session tracking  
+- 🚨 Error monitoring and alerting
+- ⚡ Handles millions of events/second
 
-**Features:**
-- Real-time message metrics and response times
-- User engagement and session tracking
-- Tool usage statistics
-- Error monitoring and alerting
-- Performance percentiles (p50, p90, p95, p99)
-- Token usage tracking
+**Access Dashboard:** http://localhost:3002 (admin/admin)
 
-**Access Grafana Dashboard:**
-```bash
-# Dashboard available at http://localhost:3002
-# Default credentials: admin/admin
-```
+📚 [Detailed Analytics Guide](backend/src/analytics/README.md)
 
-**Analytics API Endpoints:**
-```bash
-# Get metrics summary
-curl http://localhost:9081/analytics/metrics/summary?hours=24
+## ⚙️ Configuration
 
-# Response time percentiles
-curl http://localhost:9081/analytics/metrics/response-time
+**Required:**
+- `OPENAI_API_KEY` - Your OpenAI API key
+- `LANGGRAPH_API_KEY` - Server authentication (min 32 chars)
 
-# Top active users
-curl http://localhost:9081/analytics/metrics/top-users?limit=10
+**Optional:** Customize models, chunk sizes, rate limits, analytics settings, and more.
 
-# Popular tools usage
-curl http://localhost:9081/analytics/metrics/popular-tools
+📋 [Complete Environment Variables Reference](.env.example)
 
-# Recent errors
-curl http://localhost:9081/analytics/metrics/recent-errors?limit=50
-```
+## 🏗️ Architecture
 
-**What's Tracked:**
-- Chat messages (user & assistant)
-- Response times and token usage
-- Tool invocations and success rates
-- Session duration and activity
-- Errors and failures
+See detailed system architecture, scalability considerations, and design decisions:
 
-**Storage & Performance:**
-- ClickHouse columnar database
-- Optimized for analytical queries
-- Auto-cleanup after 90 days (TTL)
-- Handles millions of events/second
-- 10x+ data compression
+📚 [ARCHITECTURE.md](ARCHITECTURE.md)
 
-For detailed setup instructions, see [Analytics Setup Guide](backend/src/analytics/README.md).
+##  Technology Stack
 
-## �🔒 Environment Variables
-
-**🔑 Required Variables:**
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key (required) | - |
-| `LANGGRAPH_API_KEY` | LangGraph Server API key (min 32 chars) | - |
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:2024` |
-| `NEXT_PUBLIC_ASSISTANT_ID` | Assistant ID | `rag_agent` |
-| `NEXT_PUBLIC_API_KEY` | Frontend API key (same as LANGGRAPH_API_KEY) | - |
-
-**⚙️ Configuration Variables:**
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_MODEL` | Chat model | `gpt-4o-mini` |
-| `OPENAI_EMBEDDING_MODEL` | Embedding model | `text-embedding-3-small` |
-| `TOP_K` | Number of documents to retrieve | `5` |
-| `FAISS_INDEX_PATH` | FAISS index directory | `./storage/faiss` |
-| `MANIFEST_PATH` | Manifest file path | `./storage/manifest.json` |
-| `DOCS_DIR` | Documents directory | `./data/docs` |
-| `PDF_DIR` | PDF documents directory | `./data/docs` |
-| `CHUNK_SIZE` | Text chunk size | `1000` |
-| `CHUNK_OVERLAP` | Chunk overlap | `200` |
-| `LOG_LEVEL` | Logging level | `INFO` |
-| `RATE_LIMIT_PER_MINUTE` | Rate limit per user | `10` |
-| `MAX_MESSAGE_LENGTH` | Max message length | `5000` |
-| `MAX_THREADS_PER_USER` | Max threads per user | `20` |
-
-**📊 Analytics Variables:**
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CLICKHOUSE_HOST` | ClickHouse server host | `clickhouse` |
-| `CLICKHOUSE_PORT` | ClickHouse HTTP port | `8123` |
-| `CLICKHOUSE_USER` | ClickHouse username | `analytics` |
-| `CLICKHOUSE_PASSWORD` | ClickHouse password | `analytics_password` |
-| `CLICKHOUSE_DB` | ClickHouse database name | `analytics` |
-| `ANALYTICS_ENABLED` | Enable analytics tracking | `true` |
-| `GRAFANA_ADMIN_USER` | Grafana admin username | `admin` |
-| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password | `admin` |
-
-**🎨 UI Customization:**
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_AGENT_NAME` | Agent display name | `Agent Chat` |
-| `NEXT_PUBLIC_WELCOME_MESSAGE` | Welcome message | - |
-| `NEXT_PUBLIC_SHOW_TOOL_CALLS_TOGGLE` | Show tool calls toggle | `true` |
-| `NEXT_PUBLIC_SHOW_FILE_UPLOAD` | Enable file upload | `true` |
-
-## 📚 Technology Stack
-
-### Backend
-- **LangGraph**: Agent orchestration framework
-- **LangGraph Server**: Production agent server
-- **LangChain**: LLM application framework
-- **LlamaIndex**: Document parsing
-- **FAISS**: Vector similarity search
-- **OpenAI**: LLM and embeddings
-- **Python 3.11+**: Runtime
-
-### Frontend
-- **Agent Chat UI**: Official LangChain chat interface
-- **Next.js**: React framework
-- **TypeScript**: Type safety
-
-### Analytics
-- **ClickHouse**: High-performance columnar database
-- **Grafana**: Visualization and monitoring platform
-
-### Infrastructure
-- **Docker**: Containerization
-- **Docker Compose**: Multi-service orchestration
-
-## 🧪 Testing
-
-```bash
-cd backend
-
-# Run unit tests
-pytest tests/ -v
-
-# Run with coverage report
-pytest --cov=src --cov-report=html
-
-# Run specific test
-pytest tests/test_agent.py::test_search_tool -v
-```
+**Backend:** LangGraph, LangChain, LlamaIndex, FAISS, OpenAI, Python 3.11+  
+**Frontend:** Next.js, TypeScript, Agent Chat UI  
+**Analytics:** ClickHouse, Grafana  
+**Infrastructure:** Docker, Docker Compose
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
-
-### Quick Contribution Steps
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+**Want to contribute?** Read [CONTRIBUTING.md](CONTRIBUTING.md) • [Code of Conduct](SECURITY.md)
 
 ## 🔒 Security
 
