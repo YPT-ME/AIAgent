@@ -120,7 +120,7 @@ def load_system_prompt() -> str:
     """
     from pathlib import Path
     
-    prompt_file = Path(__file__).parent / "system_prompt.txt"
+    prompt_file = Path(__file__).parent.parent.parent / "system_prompt.txt"
     
     try:
         if prompt_file.exists():

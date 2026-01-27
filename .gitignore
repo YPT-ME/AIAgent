@@ -133,15 +133,8 @@ dmypy.json
 .DS_Store
 Thumbs.db
 
-# FAISS index files (keep in storage but don't commit actual index)
-backend/app/storage/faiss/*.faiss
-backend/app/storage/faiss/*.pkl
-backend/storage/faiss/*.faiss
-backend/storage/faiss/*.pkl
-
-# Manifest (generated)
-backend/app/storage/manifest.json
-backend/storage/manifest.json
+# Storage directory (contains runtime data - conversations, FAISS indexes, etc.)
+backend/storage/
 
 # Node modules
 node_modules/
