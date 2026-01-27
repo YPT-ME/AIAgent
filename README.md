@@ -2,12 +2,30 @@
 
 A production-ready Retrieval-Augmented Generation (RAG) AI Agent built with **LangGraph Server**, **LangChain**, **LlamaIndex**, **FAISS**, and **OpenAI**. Features the official **Agent Chat UI** from LangChain with comprehensive analytics and monitoring.
 
-> **Perfect for learning:** This project demonstrates modern AI agent architecture, RAG implementation, and production-ready patterns for building conversational AI applications.
+Build your own AI agent with custom knowledge base. This production-ready solution provides everything you need to deploy a conversational AI application with document retrieval capabilities.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Node.js 18+](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+
+## 🎥 Live Demo
+
+See a live example of this RAG AI Agent in action:
+
+**[AVideo AI Agent](https://avideoagent.ypt.me/)** - An AI assistant specialized in the [AVideo Platform](https://github.com/WWBN/AVideo) documentation, demonstrating real-world RAG capabilities with a comprehensive knowledge base.
+
+## 📸 Screenshots
+
+### Chat Interface
+
+<!-- Placeholder for Chat Interface Screenshot -->
+*Screenshot showing the agent chat interface will be added here*
+
+### Analytics Dashboard
+
+<!-- Placeholder for Analytics Dashboard Screenshot -->
+*Screenshot showing the Grafana analytics dashboard will be added here*
 
 ## ✨ Key Features
 
@@ -546,4 +564,4 @@ If this project helped you, please:
 
 ---
 
-**Built with ❤️ for learning and demonstrating modern AI agent architectures**
+**Built with ❤️ as a production-ready foundation for building custom AI agents**
