@@ -19,13 +19,11 @@ See a live example of this RAG AI Agent in action:
 
 ### Chat Interface
 
-<!-- Placeholder for Chat Interface Screenshot -->
-*Screenshot showing the agent chat interface will be added here*
+![chrome-capture-2026-01-27](https://github.com/user-attachments/assets/66d22e77-f575-4304-bce4-7c22b1d9740a)
 
 ### Analytics Dashboard
 
-<!-- Placeholder for Analytics Dashboard Screenshot -->
-*Screenshot showing the Grafana analytics dashboard will be added here*
+<img width="1467" height="785" alt="image" src="https://github.com/user-attachments/assets/9580097d-91c5-4867-a317-1478b8ce25c4" />
 
 ## ✨ Key Features
 
