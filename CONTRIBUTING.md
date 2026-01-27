@@ -185,7 +185,8 @@ frontend/
 
 ## Questions?
 
-- Open a [Discussion](https://github.com/YPT-ME/AIAgent/discussions)
+- Open an [Issue](https://github.com/YPT-ME/AIAgent/issues)
+- Email: developer@ypt.me
 - Check existing issues and PRs
 - Read the documentation
 

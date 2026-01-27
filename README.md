@@ -280,16 +280,16 @@ If this project helped you, please:
 ## 📞 Contact & Discussion
 
 - **Issues**: [GitHub Issues](https://github.com/YPT-ME/AIAgent/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YPT-ME/AIAgent/discussions)
+- **Email**: developer@ypt.me
 
-## �‍💻 About the Author
+## 👨‍💻 About the Author
 
 **Daniel Neto** - Full-stack developer specializing in AI/ML applications and video platform solutions.
 
 - 🔗 GitHub: [@DanielnetoDotCom](https://github.com/DanielnetoDotCom)
 - 💼 Project Maintainer & Lead Developer
 
-## �🙏 Acknowledgments
+## 🙏 Acknowledgments
 
 - [LangChain](https://langchain.com/) - LLM application framework
 - [LangGraph](https://langchain-ai.github.io/langgraph/) - Agent orchestration
