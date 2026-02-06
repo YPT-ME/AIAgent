@@ -362,6 +362,25 @@ def call_model(state: MessagesState, config: dict = None) -> dict[str, Any]:
     """
     messages = state["messages"]
     
+    # Extract config values early for logging
+    config = config or {}
+    configurable = config.get("configurable", {})
+    thread_id = configurable.get("thread_id", "unknown")
+    user_id = configurable.get("user_id", "anonymous")
+    
+    # Extract user IP from config (passed via LangGraph Server headers/metadata)
+    user_ip = configurable.get("user_ip") or configurable.get("x_forwarded_for") or configurable.get("client_ip", "unknown")
+    
+    # Log the user's question (last human message)
+    user_question = None
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            user_question = msg.content
+            break
+    
+    if user_question:
+        logger.info(f"📝 [QUESTION] thread_id={thread_id} | user_ip={user_ip} | user_id={user_id} | question={user_question}")
+    
     # Add system prompt if not present
     if not messages or not isinstance(messages[0], SystemMessage):
         messages = [SystemMessage(content=RAG_SYSTEM_PROMPT)] + list(messages)
@@ -373,16 +392,14 @@ def call_model(state: MessagesState, config: dict = None) -> dict[str, Any]:
         # Call the model
         response = llm.invoke(messages)
         
+        # Log the AI response
+        response_content = response.content or ""
+        logger.info(f"🤖 [RESPONSE] thread_id={thread_id} | user_ip={user_ip} | response_length={len(response_content)} | response={response_content[:500]}{'...' if len(response_content) > 500 else ''}")
+        
         # Track analytics for assistant response in background thread
         duration_ms = int((time.time() - start_time) * 1000)
         
-        # Extract thread_id from config (passed by LangGraph runtime)
-        config = config or {}
-        configurable = config.get("configurable", {})
-        thread_id = configurable.get("thread_id", "unknown")
-        user_id = configurable.get("user_id")
-        
-        logger.info(f"📋 Config debug: config={config}, thread_id={thread_id}")
+        logger.info(f"📋 Config debug: config={config}, thread_id={thread_id}, user_ip={user_ip}")
         
         # Count tokens (approximate)
         tokens = len(response.content) // 4 if response.content else 0
