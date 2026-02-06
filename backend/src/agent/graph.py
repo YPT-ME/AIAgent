@@ -349,6 +349,30 @@ def should_continue(state: MessagesState) -> Literal["tools", END]:
     return END
 
 
+def _extract_text_content(content) -> str:
+    """
+    Extract text from message content which can be string or list of content blocks.
+    
+    Args:
+        content: Message content (string or list of dicts with 'type' and 'text')
+        
+    Returns:
+        Plain text string
+    """
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        # Handle list of content blocks like [{'type': 'text', 'text': '...'}]
+        texts = []
+        for item in content:
+            if isinstance(item, dict) and item.get('type') == 'text':
+                texts.append(item.get('text', ''))
+            elif isinstance(item, str):
+                texts.append(item)
+        return ' '.join(texts)
+    return str(content)
+
+
 def call_model(state: MessagesState, config: dict = None) -> dict[str, Any]:
     """
     Call the LLM model with the current messages.
@@ -375,7 +399,7 @@ def call_model(state: MessagesState, config: dict = None) -> dict[str, Any]:
     user_question = None
     for msg in reversed(messages):
         if isinstance(msg, HumanMessage):
-            user_question = msg.content
+            user_question = _extract_text_content(msg.content)
             break
     
     if user_question:
@@ -393,23 +417,21 @@ def call_model(state: MessagesState, config: dict = None) -> dict[str, Any]:
         response = llm.invoke(messages)
         
         # Log the AI response
-        response_content = response.content or ""
+        response_content = _extract_text_content(response.content) if response.content else ""
         logger.info(f"🤖 [RESPONSE] thread_id={thread_id} | user_ip={user_ip} | response_length={len(response_content)} | response={response_content[:500]}{'...' if len(response_content) > 500 else ''}")
         
         # Track analytics for assistant response in background thread
         duration_ms = int((time.time() - start_time) * 1000)
         
-        logger.info(f"📋 Config debug: config={config}, thread_id={thread_id}, user_ip={user_ip}")
-        
         # Count tokens (approximate)
-        tokens = len(response.content) // 4 if response.content else 0
+        tokens = len(response_content) // 4 if response_content else 0
         
         _analytics_executor.submit(
             track_message_http,
             thread_id,
             user_id,
             "assistant",
-            response.content or "",
+            response_content,
             tokens,
             duration_ms,
             OPENAI_MODEL
