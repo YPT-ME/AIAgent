@@ -177,3 +177,6 @@ logs/
 # Temporary files
 tmp/
 temp/
+backend/storage/faiss/*.faiss
+backend/storage/faiss/*.pkl
+backend/storage/faiss/
