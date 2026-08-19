@@ -40,6 +40,8 @@ services:
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/langgraph.json:/app/langgraph.json:ro
+      - ./backend/system_prompt.txt:/app/system_prompt.txt:ro
+      - ./backend/system_prompt.example.txt:/app/system_prompt.example.txt:ro
       - ./backend/storage:/app/storage
       - ./data:/app/data
     healthcheck:

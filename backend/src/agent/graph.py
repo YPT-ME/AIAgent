@@ -260,8 +260,10 @@ def search_documents(query: str) -> str:
             error_message = "Knowledge base not available"
             return "The knowledge base is not available. Please ensure documents have been ingested first using the rag-ingest command."
         
-        # Perform similarity search with scores
-        results = vectorstore.similarity_search_with_score(query=query, k=TOP_K)
+        # Perform similarity search with normalized relevance scores (0-1, higher = more relevant).
+        # FAISS's raw similarity_search_with_score returns an unbounded L2 distance, which is
+        # not directly usable as "1 - score" (that previously showed relevant docs as negative).
+        results = vectorstore.similarity_search_with_relevance_scores(query=query, k=TOP_K)
         
         if not results:
             success = True
@@ -284,7 +286,7 @@ def search_documents(query: str) -> str:
             if page_number and file_type == "pdf":
                 source_ref += f", Page {page_number}"
             source_ref += f"]\nWiki URL: {wiki_url}"
-            source_ref += f"\nRelevance: {1 - score:.2f}"
+            source_ref += f"\nRelevance: {score:.2f}"
             
             formatted_results.append(f"{source_ref}\n\nContent:\n{doc.page_content}\n")
         

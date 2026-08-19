@@ -43,6 +43,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy application code
 COPY ./src ./src
 COPY ./langgraph.json ./langgraph.json
+COPY ./system_prompt.txt ./system_prompt.txt
+COPY ./system_prompt.example.txt ./system_prompt.example.txt
 
 # Create storage directories
 RUN mkdir -p /app/storage/faiss /app/data/pdfs && \
