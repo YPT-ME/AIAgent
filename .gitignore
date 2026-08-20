@@ -167,6 +167,10 @@ dist/
 # PDF data (user adds their own)
 data/pdfs/*.pdf
 
+# Docs knowledge base (cloned separately per deployment, e.g. from AVideo.wiki.git - was
+# previously an accidental broken submodule gitlink with no .gitmodules entry)
+data/docs/
+
 # Docker
 .docker/
 
