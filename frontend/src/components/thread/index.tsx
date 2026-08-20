@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { useIsEmbedded } from "@/hooks/useIsEmbedded";
 import { ContentBlocksPreview } from "./ContentBlocksPreview";
 import {
   useArtifactOpen,
@@ -88,6 +89,7 @@ function ScrollToBottom(props: { className?: string }) {
 }
 
 export function Thread() {
+  const isEmbedded = useIsEmbedded();
   const [artifactContext, setArtifactContext] = useArtifactContext();
   const [artifactOpen, closeArtifact] = useArtifactOpen();
 
@@ -252,30 +254,32 @@ export function Thread() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      <div className="relative hidden lg:flex">
-        <motion.div
-          className="absolute z-20 h-full overflow-hidden border-r bg-white"
-          style={{ width: 300 }}
-          animate={
-            isLargeScreen
-              ? { x: chatHistoryOpen ? 0 : -300 }
-              : { x: chatHistoryOpen ? 0 : -300 }
-          }
-          initial={{ x: -300 }}
-          transition={
-            isLargeScreen
-              ? { type: "spring", stiffness: 300, damping: 30 }
-              : { duration: 0 }
-          }
-        >
-          <div
-            className="relative h-full"
+      {!isEmbedded && (
+        <div className="relative hidden lg:flex">
+          <motion.div
+            className="absolute z-20 h-full overflow-hidden border-r bg-white"
             style={{ width: 300 }}
+            animate={
+              isLargeScreen
+                ? { x: chatHistoryOpen ? 0 : -300 }
+                : { x: chatHistoryOpen ? 0 : -300 }
+            }
+            initial={{ x: -300 }}
+            transition={
+              isLargeScreen
+                ? { type: "spring", stiffness: 300, damping: 30 }
+                : { duration: 0 }
+            }
           >
-            <ThreadHistory />
-          </div>
-        </motion.div>
-      </div>
+            <div
+              className="relative h-full"
+              style={{ width: 300 }}
+            >
+              <ThreadHistory />
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <div
         className={cn(
@@ -303,7 +307,7 @@ export function Thread() {
               : { duration: 0 }
           }
         >
-          {!chatStarted && (
+          {!isEmbedded && !chatStarted && (
             <div className="absolute top-0 left-0 z-10 flex w-full items-center justify-between gap-3 p-2 pl-4">
               <div>
                 {(!chatHistoryOpen || !isLargeScreen) && (
@@ -322,7 +326,7 @@ export function Thread() {
               </div>
             </div>
           )}
-          {chatStarted && (
+          {!isEmbedded && chatStarted && (
             <div className="relative z-10 flex items-center justify-between gap-3 p-2">
               <div className="relative flex items-center justify-start gap-2">
                 <div className="absolute left-0 z-10">
@@ -425,12 +429,14 @@ export function Thread() {
                 <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
                   {!chatStarted && (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex items-center gap-3">
-                        <LangGraphLogoSVG className="h-8 flex-shrink-0" />
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                          {process.env.NEXT_PUBLIC_AGENT_NAME || "Agent Chat"}
-                        </h1>
-                      </div>
+                      {!isEmbedded && (
+                        <div className="flex items-center gap-3">
+                          <LangGraphLogoSVG className="h-8 flex-shrink-0" />
+                          <h1 className="text-2xl font-semibold tracking-tight">
+                            {process.env.NEXT_PUBLIC_AGENT_NAME || "Agent Chat"}
+                          </h1>
+                        </div>
+                      )}
                       {process.env.NEXT_PUBLIC_WELCOME_MESSAGE && (
                         <p className="text-muted-foreground text-center">
                           {process.env.NEXT_PUBLIC_WELCOME_MESSAGE}
@@ -444,7 +450,7 @@ export function Thread() {
                   <div
                     ref={dropRef}
                     className={cn(
-                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
+                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-3xl shadow-md transition-all focus-within:ring-2 focus-within:ring-ring/50",
                       dragOver
                         ? "border-primary border-2 border-dotted"
                         : "border border-solid",
@@ -522,7 +528,7 @@ export function Thread() {
                           <Button
                             key="stop"
                             onClick={() => stream.stop()}
-                            className="ml-auto"
+                            className="ml-auto rounded-full shadow-md"
                           >
                             <LoaderCircle className="h-4 w-4 animate-spin" />
                             Cancel
@@ -530,7 +536,7 @@ export function Thread() {
                         ) : (
                           <Button
                             type="submit"
-                            className="ml-auto shadow-md transition-all"
+                            className="ml-auto rounded-full shadow-md transition-all hover:shadow-lg"
                             disabled={
                               isLoading ||
                               (!input.trim() && contentBlocks.length === 0)
