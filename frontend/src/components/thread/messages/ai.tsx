@@ -14,6 +14,7 @@ import { ThreadView } from "../agent-inbox";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { GenericInterruptView } from "./generic-interrupt";
 import { useArtifact } from "../artifact";
+import { Bot } from "lucide-react";
 
 function CustomComponent({
   message,
@@ -147,8 +148,13 @@ export function AssistantMessage({
   }
 
   return (
-    <div className="group mr-auto flex w-full items-start gap-2">
-      <div className="flex w-full flex-col gap-2">
+    <div className="group mr-auto flex w-full items-start gap-3">
+      {!isToolResult && (
+        <div className="bg-muted text-muted-foreground mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
+          <Bot className="size-4" />
+        </div>
+      )}
+      <div className="flex w-full min-w-0 flex-col gap-2">
         {isToolResult ? (
           <>
             <ToolResult message={message} />
@@ -161,7 +167,7 @@ export function AssistantMessage({
         ) : (
           <>
             {contentString.length > 0 && (
-              <div className="py-1">
+              <div className="bg-card border-border/60 rounded-2xl border px-4 py-3 shadow-sm">
                 <MarkdownText>{contentString}</MarkdownText>
               </div>
             )}
@@ -219,7 +225,10 @@ export function AssistantMessage({
 
 export function AssistantMessageLoading() {
   return (
-    <div className="mr-auto flex items-start gap-2">
+    <div className="mr-auto flex items-start gap-3">
+      <div className="bg-muted text-muted-foreground mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
+        <Bot className="size-4" />
+      </div>
       <div className="bg-muted flex h-8 items-center gap-1 rounded-2xl px-4 py-2">
         <div className="bg-foreground/50 h-1.5 w-1.5 animate-[pulse_1.5s_ease-in-out_infinite] rounded-full"></div>
         <div className="bg-foreground/50 h-1.5 w-1.5 animate-[pulse_1.5s_ease-in-out_0.5s_infinite] rounded-full"></div>
