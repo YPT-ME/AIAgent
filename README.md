@@ -169,6 +169,13 @@ docker compose exec langgraph-server python -m src.ingestion.ingest --status
 ./ingest.sh "How do I install it?" --no-pull
 ```
 
+To keep the agent in sync with a docs repository automatically, run it from cron with `--if-changed`. It pulls `data/docs` and only rebuilds and restarts the agent when the docs changed since the last successful run; otherwise it exits silently:
+
+```bash
+# sudo crontab -e
+*/15 * * * * /path/to/AIAgent/ingest.sh --if-changed >> /var/log/aiagent-ingest.log 2>&1
+```
+
 ## 🔧 Local Development
 
 For detailed development setup, testing, and contribution guidelines, see:
