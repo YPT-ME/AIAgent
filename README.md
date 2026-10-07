@@ -162,8 +162,11 @@ The services will be available at:
 # Check ingestion status
 docker compose exec langgraph-server python -m src.ingestion.ingest --status
 
-# Manually re-ingest documents if needed
-docker compose exec langgraph-server python -m src.ingestion.ingest --docs-dir /app/data/docs
+# After updating data/docs: pull, rebuild the index, restart the agent and verify
+./ingest.sh
+
+# Optional: pass a test question and/or skip the git pull of data/docs
+./ingest.sh "How do I install it?" --no-pull
 ```
 
 ## 🔧 Local Development

@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     
     # OpenAI Configuration
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-6-luna"
     openai_embedding_model: str = "text-embedding-3-small"
     
     # Vector Store Configuration

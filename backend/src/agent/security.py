@@ -69,7 +69,7 @@ class UsageMonitor:
         user_id: str,
         input_tokens: int = 0,
         output_tokens: int = 0,
-        model: str = "gpt-4o-mini"
+        model: str = "gpt-6-luna"
     ):
         """Log a request with token usage"""
         today = datetime.now().strftime("%Y-%m-%d")
@@ -79,10 +79,10 @@ class UsageMonitor:
         self.daily_stats[key]['input_tokens'] += input_tokens
         self.daily_stats[key]['output_tokens'] += output_tokens
         
-        # Estimate cost (GPT-4o-mini pricing)
-        # Input: $0.150 / 1M tokens, Output: $0.600 / 1M tokens
-        input_cost = (input_tokens / 1_000_000) * 0.15
-        output_cost = (output_tokens / 1_000_000) * 0.60
+        # Estimate cost (GPT-6 Luna pricing)
+        # Input: $0.10 / 1M tokens, Output: $0.50 / 1M tokens
+        input_cost = (input_tokens / 1_000_000) * 0.10
+        output_cost = (output_tokens / 1_000_000) * 0.50
         cost = input_cost + output_cost
         
         self.daily_stats[key]['estimated_cost'] += cost

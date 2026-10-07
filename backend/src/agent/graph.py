@@ -15,6 +15,7 @@ The agent:
 
 import logging
 import os
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated, Any, Literal
@@ -95,7 +96,9 @@ def track_message_http(thread_id: str, user_id: str, message_type: str, content:
 # =============================================================================
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-6-luna")
+# Only used by reasoning models: none, low, medium, high, xhigh, max
+OPENAI_REASONING_EFFORT = os.getenv("OPENAI_REASONING_EFFORT", "medium")
 OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 FAISS_INDEX_PATH = os.getenv("FAISS_INDEX_PATH", "./storage/faiss")
 TOP_K = int(os.getenv("TOP_K", "5"))
@@ -321,12 +324,31 @@ def search_documents(query: str) -> str:
 # Tools list
 tools = [search_documents]
 
+
+def is_reasoning_model(model: str) -> bool:
+    """o-series and gpt-5+ models take a reasoning effort and reject custom temperatures."""
+    gpt_version = re.match(r"gpt-(\d+)", model)
+    return bool(re.match(r"o\d", model)) or (
+        gpt_version is not None and int(gpt_version.group(1)) >= 5 and "chat" not in model
+    )
+
+
+if is_reasoning_model(OPENAI_MODEL):
+    # Chat Completions rejects function tools combined with reasoning_effort on these
+    # models, so they go through the Responses API
+    sampling_kwargs: dict[str, Any] = {
+        "reasoning_effort": OPENAI_REASONING_EFFORT,
+        "use_responses_api": True,
+    }
+else:
+    sampling_kwargs = {"temperature": 0.5}
+
 # Initialize the LLM with tools
 llm = ChatOpenAI(
     model=OPENAI_MODEL,
     api_key=OPENAI_API_KEY,
-    temperature=0.5,
     streaming=True,
+    **sampling_kwargs,
 ).bind_tools(tools)
 
 
