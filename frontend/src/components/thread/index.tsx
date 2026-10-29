@@ -33,6 +33,7 @@ import { Switch } from "../ui/switch";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useIsEmbedded } from "@/hooks/useIsEmbedded";
 import { ThemeToggle } from "./theme-toggle";
+import { DeployInfo } from "./deploy-info";
 import { ContentBlocksPreview } from "./ContentBlocksPreview";
 import {
   useArtifactOpen,
@@ -456,7 +457,7 @@ export function Thread() {
                   <div
                     ref={dropRef}
                     className={cn(
-                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-3xl shadow-md transition-all focus-within:ring-2 focus-within:ring-ring/50",
+                      "bg-muted relative z-10 mx-auto mb-2 w-full max-w-3xl rounded-3xl shadow-md transition-all focus-within:ring-2 focus-within:ring-ring/50",
                       dragOver
                         ? "border-primary border-2 border-dotted"
                         : "border border-solid",
@@ -554,6 +555,7 @@ export function Thread() {
                       </div>
                     </form>
                   </div>
+                  <DeployInfo className="-mt-6 mb-2" />
                 </div>
               }
             />

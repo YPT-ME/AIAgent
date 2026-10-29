@@ -3,6 +3,9 @@
   "graphs": {
     "rag_agent": "./src/agent/graph.py:graph"
   },
+  "http": {
+    "app": "./src/webapp.py:app"
+  },
   "env": ".env",
   "dependencies": ["."]
 }
