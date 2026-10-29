@@ -118,22 +118,31 @@ RAG AI Agent is a production-ready conversational AI system that combines docume
 
 **Responsibilities:**
 - Store document embeddings
-- Fast similarity search (< 50ms)
-- Incremental updates
+- Exact similarity search (latency depends on index size and hardware)
+- Incremental updates: chunks of changed and deleted files are removed before new ones are added; the manifest is saved only after the index
+- Atomic snapshot save (temporary file, flush/fsync, then one `os.replace`); vectors and docstore are committed together. The manifest is a separate atomic write after the snapshot
 
 **Storage Structure:**
 ```
 storage/
 ├── faiss/
-│   ├── index.faiss        # Vector index
-│   └── index.pkl          # Metadata
+│   ├── index.snapshot     # Complete store; preferred when present
+│   ├── index.faiss        # Legacy vector index (read compatibility)
+│   └── index.pkl          # Legacy metadata (read compatibility)
 └── manifest.json          # Document hashes
 ```
 
 **Index Strategy:**
-- IndexFlatIP (Inner Product)
-- Normalized vectors
+- IndexFlatL2 (exact Euclidean search, the LangChain FAISS default)
+- Search output shows the raw squared L2 distance (lower is closer), without claiming a 0–1 relevance probability and without a cutoff
 - Metadata storage for filtering
+- Scoped searches fetch all vectors before metadata filtering, so a minority category is not hidden behind the first 100 hits. This adds result allocation proportional to index size; FAISS's default flat search already scans all vectors
+- Every incremental CLI run loads/scans the index to reconcile counts and legacy IDs. Absolute-path IDs require re-embedding after relocation or an OS change
+- A parse/embedding failure aborts before persistence, including a partial rebuild. No supported files is an error and preserves existing storage. If the manifest save fails after snapshot publication, the next run reconciles it
+- Agent reloads are serialized and check the disk signature before and after loading. Corrupt replacements retain the last loaded copy; cold starts have no such fallback. Windows sharing violations fail the atomic replacement and keep the prior file
+- Only trusted local snapshots/pickles may be loaded. Concurrent ingestion writers must be serialized externally; separate snapshot/manifest commits do not provide a multi-writer transaction
+
+The effective `backend/system_prompt.txt` is copied into the image at build time and read once at module startup. Apply changes by rebuilding the image and recreating the backend; a restart of the existing image keeps its old effective prompt. The mounted example is only a fallback. Recreating the backend runs entrypoint ingestion, so it can incur embedding cost; a build alone does not run the entrypoint.
 
 ### 4. Analytics (ClickHouse + Grafana)
 
@@ -170,12 +179,14 @@ PDF/Markdown Files
 ┌──────────────┐
 │ File Loader  │  (LlamaIndex)
 └──────┬───────┘
-      │ Extract text + metadata
+      │ Extract text + metadata (wiki page/URL, category, title,
+      │ and audience/version only when the page states them)
       ▼
 ┌──────────────┐
-│ Text Chunker │  (LangChain)
+│ Text Chunker │  (Markdown sections + LangChain)
 └──────┬───────┘
-      │ Chunk size: 1000, overlap: 200
+      │ Split by headings; each chunk starts with [page | heading path]
+      │ Chunk size: CHUNK_SIZE (default 1000), overlap: CHUNK_OVERLAP (default 200)
       ▼
 ┌──────────────┐
 │  Embeddings  │  (OpenAI text-embedding-3-small)

@@ -101,7 +101,7 @@ wait_for_server() {
     return 1
 }
 
-# 2. Rebuild the index (incremental mode leaves stale chunks of edited/deleted files)
+# 2. Rebuild from scratch (parse/embed/snapshot-save failures preserve prior storage)
 if ! "${DC[@]}" exec -T "$SERVICE" true >/dev/null 2>&1; then
     step "Starting $SERVICE..."
     "${DC[@]}" up -d "$SERVICE"
@@ -110,7 +110,7 @@ fi
 
 step "Rebuilding the index from scratch (this may take a few minutes)..."
 "${DC[@]}" exec -T "$SERVICE" python -m src.ingestion.ingest --docs-dir /app/data/docs --rebuild \
-    || fail "Ingestion failed. $SERVICE was NOT restarted, so the agent keeps answering from the old index in memory. Fix the error above and run this script again."
+    || fail "Ingestion failed. $SERVICE was not recreated. If only the manifest save failed, the agent may already have reloaded the published snapshot; inspect the error and retry ingestion."
 
 # 3. Recreate (not just restart) so the agent drops its cached index and picks up .env changes
 step "Restarting $SERVICE..."

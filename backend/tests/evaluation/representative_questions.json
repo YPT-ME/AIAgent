@@ -1,0 +1,101 @@
+[
+  {
+    "question": "O Local Encoder substitui completamente o Web Encoder?",
+    "scope": "guides",
+    "expected_sources": ["Local-Encoder"],
+    "source_facts": {
+      "Local-Encoder": [
+        "Local Encoder complements the Web Encoder",
+        "Using it for uploads does not make the Web Encoder optional"
+      ]
+    },
+    "must_state": [
+      "No: Local Encoder complements the Web Encoder, which must stay configured in the Encoder URL",
+      "Features that still use the Web Encoder (e.g. VideoThumbnails sprites, MP4ThumbsAndGif, live previews, recorded lives, Meet/Zoom/mobile uploads, playlists played live, embed-link metadata)",
+      "Local Encoder accepts single video links, not playlist or channel imports"
+    ],
+    "must_not_state": [
+      "That the Web Encoder can be removed or the Encoder URL pointed at Local Encoder",
+      "Speed gains as guaranteed (the page says they depend on hardware, video and qualities)"
+    ]
+  },
+  {
+    "question": "Por que minhas miniaturas de navegação não aparecem?",
+    "scope": "guides, then technical",
+    "expected_sources": ["VideoThumbnails-Plugin", "Technical-Plugin-VideoThumbnails"],
+    "source_facts": {
+      "VideoThumbnails-Plugin": [
+        "VideoThumbnails is a paid add-on",
+        "Previews are made only for videos hosted on your site",
+        "createStprits"
+      ],
+      "Technical-Plugin-VideoThumbnails": ["Generates seek-bar preview sprites using the Web Encoder"]
+    },
+    "must_state": [
+      "Clarify or cover both readings: seek-bar previews (VideoThumbnails sprite) and video thumbnail images",
+      "The sprite is built by the Web Encoder, which must be online and able to download the video from the site",
+      "Checks: wait and reload after the first view; embedded videos get no preview; createStprits lines in the log",
+      "Possible causes presented as checks, not as a confirmed diagnosis"
+    ],
+    "must_not_state": ["That VideoThumbnails is a free plugin", "A certain cause without the user's logs"]
+  },
+  {
+    "question": "Qual a diferença entre o plugin WebRTC e os recursos premium do WebRTC2RTMP?",
+    "scope": "guides, then technical",
+    "expected_sources": ["WebRTC-plugin", "WebRTC to RTMP Plans.pdf"],
+    "source_facts": {
+      "WebRTC-plugin": [
+        "The plugin is free and included in AVideo",
+        "Without premium, broadcasts carry a watermark and have lower limits"
+      ]
+    },
+    "must_state": [
+      "The WebRTC plugin is free; premium refers to WebRTC2RTMP server limits (concurrent broadcasts, minutes per broadcast) and watermark removal",
+      "Requirements: Live plugin with a live server, Scheduler with cron, HTTPS, port 3000 open",
+      "Plans per domain: Starter $10/month (2 streams, 2 h), Basic $20/month (5, 4 h), Pro $30/month (10, 6 h), Unlimited $50/month, Lifetime $1000 one-time; Unlimited included with our hosting",
+      "Plan details cited from the PDF by file name and page or from the marketplace page"
+    ],
+    "must_not_state": [
+      "That the WebRTC plugin itself is paid",
+      "A wiki URL for the PDF",
+      "Unlimited video calls as a documented capability"
+    ]
+  },
+  {
+    "question": "Como usar armazenamento S3 no AVideo?",
+    "scope": "guides",
+    "expected_sources": ["AWS_S3-Plugin", "Use-AWS-S3-on-AVideo-Platform"],
+    "source_facts": {
+      "AWS_S3-Plugin": ["AWS_S3 is a paid add-on", "HLS videos, images and thumbnails stay on your server"],
+      "Use-AWS-S3-on-AVideo-Platform": ["Files larger than 5 GB stay on your server"]
+    },
+    "must_state": [
+      "AWS_S3 is a paid add-on from the marketplace",
+      "Configured in Admin Panel > Settings > S3, B2, FTP settings (region, bucket_name, key, secret, endpoint for S3-compatible providers)",
+      "Only MP4, WebM and MP3 go to the bucket; HLS, images and thumbnails stay local"
+    ],
+    "must_not_state": [
+      "That HLS videos are stored in S3",
+      "A refusal to discuss Amazon S3 because of the CDN policy (it covers third-party CDNs, not storage plugins)",
+      "A third-party CDN provider recommendation"
+    ]
+  },
+  {
+    "question": "O pagamento foi aprovado, mas o acesso não foi liberado.",
+    "scope": "guides, then technical",
+    "expected_sources": ["YPTWallet-Usage", "Technical-Payments"],
+    "source_facts": {
+      "YPTWallet-Usage": ["The user paid but the balance did not change"],
+      "Technical-Payments": ["A browser success message, approved agreement or funded wallet does not alone prove all three outcomes"]
+    },
+    "must_state": [
+      "Ask or cover which payment provider and which product (subscription, pay-per-view, live event, wallet credit)",
+      "Separate the three outcomes: payment settled at the provider, wallet credited, access fulfilled",
+      "Viewer: check the wallet balance/history and contact the site; administrator: provider webhook/IPN, AVideo log, wallet log"
+    ],
+    "must_not_state": [
+      "That access will certainly be released or by when",
+      "Advice to replay provider events or edit the database without checking the transaction first"
+    ]
+  }
+]

@@ -169,6 +169,14 @@ docker compose exec langgraph-server python -m src.ingestion.ingest --status
 ./ingest.sh "How do I install it?" --no-pull
 ```
 
+Incremental runs (`python -m src.ingestion.ingest` without `--rebuild`, `ingest.ps1`, `ingest.bat`, and the automatic run at container start) replace the chunks of changed files and remove those of deleted files. They also repair indexes built by older versions: files with random/missing chunk IDs or whose chunk count disagrees with the manifest are indexed again, and orphan chunks are removed (this check loads and scans the index on every run, including a no-change run). IDs use absolute document paths: moving the directory or copying an index between Windows and Linux causes re-embedding, rather than portable reuse.
+
+New saves atomically replace `storage/faiss/index.snapshot`, containing the vectors, metadata and ID mapping together; legacy `index.faiss`/`index.pkl` pairs remain readable and are preserved when migrating. Readers and writers must use this updated code before ingestion: older deployments cannot read new snapshots and may keep reading the legacy pair. The manifest is atomically replaced only after the index is saved. These are separate commits: a failed manifest write is reported and the next incremental run reconciles it. Any parsing/embedding failure, even for just one file during a rebuild, preserves the previous files on disk. An empty documents directory is treated as a likely mount problem and fails without clearing the knowledge base.
+
+The running agent reloads changed snapshots without a restart. A corrupt replacement keeps the previously loaded copy in memory; a cold process reports the knowledge base unavailable. Snapshots are trusted local serialized data, just like legacy pickles. Do not load files supplied by untrusted users. Serialize ingestion jobs (the shell script uses `flock` when available); the manifest and index do not form a transaction across concurrent writers.
+
+Markdown in subfolders (such as the wiki's `technical/` pages) is indexed; each page is cited by its unique GitHub Wiki page name, and PDFs are cited by file name and page. The agent's search tool can be limited to basic guides, technical references or generated source inventories.
+
 To keep the agent in sync with a docs repository automatically, run it from cron with `--if-changed`. It pulls `data/docs` and only rebuilds and restarts the agent when the docs changed since the last successful run; otherwise it exits silently:
 
 ```bash
@@ -193,9 +201,11 @@ cp backend/system_prompt.example.txt backend/system_prompt.txt
 # Edit with your custom instructions
 nano backend/system_prompt.txt
 
-# Restart the backend to apply changes
-docker compose restart langgraph-server
+# Rebuild and recreate the backend to apply changes
+docker compose up -d --build langgraph-server
 ```
+
+`system_prompt.txt` is copied into the image when it is built (it is not mounted as a volume), and the agent reads it once at startup. A plain `docker compose restart`, or `./ingest.sh` (which recreates the container from the existing image), keeps the previous prompt. Only `system_prompt.example.txt` is mounted. The example is the fallback when the effective file is missing or cannot be read; changing the example also requires the agent to reload at startup. The recreate command above runs automatic ingestion, which can call the configured embedding provider; building the image alone does not run ingestion.
 
 **What you can customize:**
 - Agent's personality and tone

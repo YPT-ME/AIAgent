@@ -10,6 +10,7 @@ import hashlib
 import json
 import logging
 import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -110,20 +111,35 @@ class ManifestManager:
         
         self._manifest.last_updated = datetime.utcnow().isoformat()
         
+        # Write a temporary file and move it into place, so a failed write keeps the old manifest
+        tmp_path = None
         try:
-            with open(self.manifest_path, "w", encoding="utf-8") as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=self.manifest_path.parent,
+                prefix=self.manifest_path.name + ".", suffix=".tmp", delete=False,
+            ) as f:
+                tmp_path = Path(f.name)
                 json.dump(self._manifest.to_dict(), f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, self.manifest_path)
             logger.info(f"Saved manifest to {self.manifest_path}")
             return True
         except Exception as e:
             logger.error(f"Error saving manifest: {e}")
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
             return False
-    
+
     def clear(self) -> None:
         """Clear the manifest."""
         self._manifest = Manifest()
         self.save()
         logger.info("Manifest cleared")
+
+    def reset(self) -> None:
+        """Start an empty manifest in memory. The file on disk is kept until save()."""
+        self._manifest = Manifest()
     
     @staticmethod
     def compute_file_hash(filepath: Path) -> str:
@@ -168,22 +184,24 @@ class ManifestManager:
         filepath: Path,
         chunk_count: int,
         page_count: int | None = None,
+        file_hash: str | None = None,
     ) -> None:
         """
         Add or update a document in the manifest.
-        
+
         Args:
             filepath: Path to the document
             chunk_count: Number of chunks created
             page_count: Number of pages in document
+            file_hash: Hash of the content that was indexed (computed now if omitted)
         """
         manifest = self.load()
         file_key = str(filepath.absolute())
-        
+
         entry = DocumentEntry(
             filename=filepath.name,
             filepath=file_key,
-            file_hash=self.compute_file_hash(filepath),
+            file_hash=file_hash or self.compute_file_hash(filepath),
             last_indexed_at=datetime.utcnow().isoformat(),
             chunk_count=chunk_count,
             file_size=filepath.stat().st_size,
@@ -193,7 +211,7 @@ class ManifestManager:
         manifest.documents[file_key] = entry
         logger.debug(f"Added document to manifest: {filepath.name}")
     
-    def remove_document(self, filepath: Path) -> bool:
+    def remove_document(self, filepath: str | Path) -> bool:
         """
         Remove a document from the manifest.
         
@@ -204,11 +222,15 @@ class ManifestManager:
             True if removed, False if not found
         """
         manifest = self.load()
-        file_key = str(filepath.absolute())
+        # A manifest copied from another OS contains keys Path.absolute() would
+        # reinterpret on this host. Preserve the exact stored identity on removal.
+        file_key = str(filepath)
+        if file_key not in manifest.documents:
+            file_key = str(Path(filepath).absolute())
         
         if file_key in manifest.documents:
             del manifest.documents[file_key]
-            logger.debug(f"Removed document from manifest: {filepath.name}")
+            logger.debug(f"Removed document from manifest: {file_key}")
             return True
         return False
     
@@ -231,7 +253,7 @@ class ManifestManager:
         logger.info(f"{len(files_to_index)} of {len(pdf_files)} files need indexing")
         return files_to_index
     
-    def get_removed_files(self, pdf_files: list[Path]) -> list[Path]:
+    def get_removed_files(self, pdf_files: list[Path]) -> list[str]:
         """
         Find files in manifest that no longer exist.
         
@@ -247,7 +269,7 @@ class ManifestManager:
         removed = []
         for file_key in manifest.documents:
             if file_key not in current_paths:
-                removed.append(Path(file_key))
+                removed.append(file_key)
         
         return removed
     

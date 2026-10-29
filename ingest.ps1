@@ -18,4 +18,10 @@ if ($rebuild) {
     docker compose exec langgraph-server python -m src.ingestion.ingest --docs-dir /app/data/docs
 }
 
+if ($LASTEXITCODE -ne 0) {
+    $ingestExitCode = $LASTEXITCODE
+    Write-Host "`nIngestion failed. Check the error above." -ForegroundColor Red
+    exit $ingestExitCode
+}
+
 Write-Host "`n✅ Done!" -ForegroundColor Green
